@@ -8,9 +8,10 @@ conf = {
 }
 consumer = Consumer(conf)
 
+
 def consume_messages():
     try:
-        consumer.subscribe(['test-topic'])
+        consumer.subscribe(['wal'])
 
         while True:
             msg = consumer.poll(timeout=1.0)
@@ -22,12 +23,14 @@ def consume_messages():
                 elif msg.error():
                     raise KafkaException(msg.error())
             else:
-                print(f"Received message: {msg.value().decode('utf-8')} from {msg.topic()} [{msg.partition()}]")
+                print(f"Received message: {msg.value().decode(
+                    'utf-8')} from {msg.topic()} [{msg.partition()}]")
 
     except KafkaException as e:
         print(f"Failed to consume messages: {e}")
     finally:
         consumer.close()
+
 
 if __name__ == "__main__":
     consume_messages()
