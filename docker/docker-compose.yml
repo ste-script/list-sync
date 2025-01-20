@@ -18,7 +18,9 @@ services:
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_NUM_PARTITIONS: 3
   pgsql:
-    image: postgres:16-alpine
+    build:
+      context: pgsql
+      dockerfile: Dockerfile
     container_name: pgsql
     ports:
       - 5432:5432
@@ -26,11 +28,9 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: postgres
-    command: |
-      postgres 
-      -c wal_level=logical 
-      -c max_wal_senders=4
-      -c max_replication_slots=4
+    volumes:
+      - ./pgsql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
 
 volumes:
   pgdata:

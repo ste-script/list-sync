@@ -7,12 +7,16 @@ from producer import send_message
 conn = psycopg2.connect('dbname=postgres user=postgres password=postgres host=localhost',
                         connection_factory=psycopg2.extras.LogicalReplicationConnection)
 cur = conn.cursor()
+replication_options = {
+}
 try:
     # test_decoding produces textual output
-    cur.start_replication(slot_name='pytest', decode=True)
+    cur.start_replication(slot_name='pytest', decode=True,
+                          options=replication_options)
 except psycopg2.ProgrammingError:
-    cur.create_replication_slot('pytest', output_plugin='test_decoding')
-    cur.start_replication(slot_name='pytest', decode=True)
+    cur.create_replication_slot('pytest', output_plugin='wal2json')
+    cur.start_replication(slot_name='pytest', decode=True,
+                          options=replication_options)
 
 
 class DemoConsumer(object):
@@ -23,6 +27,7 @@ class DemoConsumer(object):
         elif payload.startswith('COMMIT'):
             print("Transaction committed")
         else:
+            print(json.loads(payload))
             send_message(payload)
         msg.cursor.send_feedback(flush_lsn=msg.data_start)
 
