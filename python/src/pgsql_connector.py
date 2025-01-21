@@ -8,6 +8,8 @@ conn = psycopg2.connect('dbname=postgres user=postgres password=postgres host=lo
                         connection_factory=psycopg2.extras.LogicalReplicationConnection)
 cur = conn.cursor()
 replication_options = {
+    "add-tables": "public.newtable",
+    "format-version": "2",
 }
 try:
     # test_decoding produces textual output

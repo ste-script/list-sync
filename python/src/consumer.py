@@ -1,8 +1,9 @@
 from confluent_kafka import Consumer, KafkaException, KafkaError
+import uuid
 
 conf = {
     'bootstrap.servers': 'localhost:9092',
-    'group.id': 'my-group',
+    'group.id': uuid.uuid1(),
     'auto.offset.reset': 'earliest',
     'security.protocol': 'PLAINTEXT',
 }
