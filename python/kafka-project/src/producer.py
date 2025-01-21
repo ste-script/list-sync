@@ -1,7 +1,7 @@
 from confluent_kafka import Producer, KafkaException
 
 conf = {
-    'bootstrap.servers': 'localhost:9092',
+    'bootstrap.servers': 'broker:9092',
     'security.protocol': 'PLAINTEXT',
 }
 producer = Producer(conf)

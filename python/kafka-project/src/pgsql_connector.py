@@ -4,7 +4,7 @@ import psycopg2
 import psycopg2.extras
 import json
 from producer import send_message
-conn = psycopg2.connect('dbname=postgres user=postgres password=postgres host=localhost',
+conn = psycopg2.connect('dbname=postgres user=postgres password=postgres host=pgsql',
                         connection_factory=psycopg2.extras.LogicalReplicationConnection)
 cur = conn.cursor()
 replication_options = {
