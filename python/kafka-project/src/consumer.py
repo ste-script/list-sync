@@ -1,6 +1,7 @@
 # filepath: /home/ste/Documents/list-sync/python/kafka-project/src/consumer.py
 from confluent_kafka import Consumer, KafkaException, KafkaError
 import logging
+import uuid
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -9,7 +10,7 @@ logger = logging.getLogger(__name__)
 conf = {
     # Ensure this matches the advertised listener
     'bootstrap.servers': 'broker:9092',
-    'group.id': 'my_consumer_group',
+    'group.id': uuid.uuid1(),
     'auto.offset.reset': 'earliest',
 }
 

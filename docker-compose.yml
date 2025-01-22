@@ -1,7 +1,6 @@
 services:
   broker:
     image: apache/kafka:3.9.0
-    container_name: broker
     depends_on:
       - pgsql
     ports:
@@ -36,7 +35,6 @@ services:
     build:
       context: docker/python
       dockerfile: Dockerfile
-    container_name: producer
     depends_on:
       - broker
     volumes:
@@ -49,6 +47,23 @@ services:
           selinux: z
     working_dir: /app
     command: "poetry run python src/pgsql_connector.py"
+  consumer:
+    restart: always
+    build:
+      context: docker/python
+      dockerfile: Dockerfile
+    deploy:
+      replicas: 2
+    volumes:
+      - type: bind
+        read_only: false
+        source: ./python/kafka-project
+        target: /app
+        bind:
+          propagation: shared
+          selinux: z
+    working_dir: /app
+    command: "poetry run python src/consumer.py"
 
 volumes:
   pgdata:
