@@ -4,6 +4,10 @@ conf = {
     'bootstrap.servers': 'broker:9092',
     'security.protocol': 'PLAINTEXT',
     "queue.buffering.max.messages": 10000000,
+    'compression.type': 'lz4',
+    'linger.ms': 300,
+    'batch.num.messages': 1000000,
+    'batch.size': 100000000,
 }
 producer = Producer(conf)
 

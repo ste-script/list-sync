@@ -2,6 +2,7 @@
 from confluent_kafka import Consumer, KafkaException, KafkaError
 import logging
 import uuid
+import subprocess
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -42,5 +43,15 @@ def consume_messages():
         consumer.close()
 
 
+def set_network_latency():
+    try:
+        subprocess.run(["tc", "qdisc", "add", "dev", "eth0", "root", "netem", "delay", "100ms"], check=True)
+        logger.info("Network latency set to 100ms")
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Failed to set network latency: {e}")
+
+
+
 if __name__ == "__main__":
+    set_network_latency()
     consume_messages()
