@@ -3,6 +3,7 @@ from confluent_kafka import Consumer, KafkaException, KafkaError
 import logging
 import uuid
 import subprocess
+from csv_writer import write_to_file
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -12,7 +13,7 @@ conf = {
     # Ensure this matches the advertised listener
     'bootstrap.servers': 'broker1:9092',
     'group.id': uuid.uuid1(),
-    'auto.offset.reset': 'earliest',
+    'auto.offset.reset': 'earliest'
 }
 
 consumer = Consumer(conf)
@@ -34,8 +35,10 @@ def consume_messages():
                     logger.error(f"Error: {msg.error()}")
                     raise KafkaException(msg.error())
             else:
-                logger.info(f"Received message: {msg.value().decode(
-                    'utf-8')} from {msg.topic()} [{msg.partition()}]")
+                msg_string = msg.value().decode('utf-8')
+                logger.info(f"Received message: {msg_string} from {
+                            msg.topic()} [{msg.partition()}]")
+                write_to_file(msg_string)
 
     except KafkaException as e:
         logger.error(f"Failed to consume messages: {e}")
@@ -48,14 +51,15 @@ def set_network_latency():
         latency = 800  # ms
         speed = 20  # mbit
         subprocess.run(
-            f"tc qdisc add dev eth0 root netem rate {speed}mbit delay {latency}ms",
+            f"tc qdisc add dev eth0 root netem rate {
+                speed}mbit delay {latency}ms",
             shell=True,
             check=True
         )
-        logger.info(f"Network latency set to {latency}ms and speed to {speed}mbit")
+        logger.info(f"Network latency set to {
+                    latency}ms and speed to {speed}mbit")
     except subprocess.CalledProcessError as e:
         logger.error(f"Failed to set network latency: {e}")
-
 
 
 if __name__ == "__main__":
