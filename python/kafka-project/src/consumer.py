@@ -45,10 +45,14 @@ def consume_messages():
 
 def set_network_latency():
     try:
-        # limit connection speed to 20mbps and add 800ms latency
+        latency = 800  # ms
+        speed = 20  # mbit
         subprocess.run(
-            "tc qdisc add dev eth0 root netem rate 20mbit delay 800ms", shell=True, check=True)
-        logger.info("Network latency set to 100ms")
+            f"tc qdisc add dev eth0 root netem rate {speed}mbit delay {latency}ms",
+            shell=True,
+            check=True
+        )
+        logger.info(f"Network latency set to {latency}ms and speed to {speed}mbit")
     except subprocess.CalledProcessError as e:
         logger.error(f"Failed to set network latency: {e}")
 

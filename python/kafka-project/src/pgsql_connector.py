@@ -1,4 +1,3 @@
-from __future__ import print_function
 import sys
 import psycopg2
 import psycopg2.extras
@@ -8,8 +7,11 @@ conn = psycopg2.connect('dbname=postgres user=postgres password=postgres host=pg
                         connection_factory=psycopg2.extras.LogicalReplicationConnection)
 cur = conn.cursor()
 replication_options = {
-    "add-tables": "public.newtable",
+    "add-tables": "public.example_table",
     "format-version": "2",
+    "include-schemas": "false",
+    "include-types": "false",
+    "include-transaction": "false",
 }
 try:
     # test_decoding produces textual output

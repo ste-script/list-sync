@@ -22,7 +22,7 @@ services:
       - list-sync-net
   pgsql:
     build:
-      context: docker/pgsql
+      context: pgsql
       dockerfile: Dockerfile
     container_name: pgsql
     ports:
@@ -37,15 +37,15 @@ services:
       - list-sync-net
   producer:
     build:
-      context: docker/python
+      context: ./python/kafka-project
       dockerfile: Dockerfile
     depends_on:
       - broker
     volumes:
       - type: bind
         read_only: false
-        source: ./python/kafka-project
-        target: /app
+        source: ./python/kafka-project/src
+        target: /app/src
         bind:
           propagation: shared
           selinux: z
@@ -56,25 +56,39 @@ services:
   consumer:
     restart: always
     build:
-      context: docker/python
+      context: ./python/kafka-project
       dockerfile: Dockerfile
     deploy:
       replicas: 2
     privileged: true
-    labels:
-      - "com.docker-tc.enabled=1"
-      - "com.docker-tc.limit=20mbit"
-      - "com.docker-tc.delay=100ms"
     volumes:
       - type: bind
         read_only: false
-        source: ./python/kafka-project
-        target: /app
+        source: ./python/kafka-project/src
+        target: /app/src
         bind:
           propagation: shared
           selinux: z
     working_dir: /app
     command: "poetry run python src/consumer.py"
+    networks:
+      - list-sync-net
+  seeder:
+    restart: always
+    build:
+      context: ./python/kafka-project
+      dockerfile: Dockerfile
+    privileged: true
+    volumes:
+      - type: bind
+        read_only: false
+        source: ./python/kafka-project/test
+        target: /app/test
+        bind:
+          propagation: shared
+          selinux: z
+    working_dir: /app
+    command: "sleep infinity"
     networks:
       - list-sync-net
 
