@@ -52,6 +52,7 @@ democonsumer = DemoConsumer()
 
 print("Starting streaming, press Control-C to end...", file=sys.stderr)
 try:
+    #cur.execute("ALTER TABLE public.example_table REPLICA IDENTITY FULL;")
     cur.consume_stream(democonsumer)
 except KeyboardInterrupt:
     cur.close()
