@@ -59,7 +59,7 @@ services:
       context: ./python/kafka-project
       dockerfile: Dockerfile
     deploy:
-      replicas: 2
+      replicas: 20
     privileged: true
     volumes:
       - type: bind
