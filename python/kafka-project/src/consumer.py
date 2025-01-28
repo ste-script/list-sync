@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 conf = {
     # Ensure this matches the advertised listener
-    'bootstrap.servers': 'broker:9092',
+    'bootstrap.servers': 'broker1:9092',
     'group.id': uuid.uuid1(),
     'auto.offset.reset': 'earliest',
 }

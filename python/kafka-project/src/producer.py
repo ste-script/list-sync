@@ -1,7 +1,7 @@
 from confluent_kafka import Producer, KafkaException
 
 conf = {
-    'bootstrap.servers': 'broker:9092',
+    'bootstrap.servers': 'broker1:9092',
     'security.protocol': 'PLAINTEXT',
     "queue.buffering.max.messages": 10000000,
     'compression.type': 'lz4',
