@@ -8,11 +8,11 @@ from csv_writer import write_to_file
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
+id = uuid.uuid1()
 conf = {
     # Ensure this matches the advertised listener
     'bootstrap.servers': 'broker1:9092',
-    'group.id': uuid.uuid1(),
+    'group.id': id,
     'auto.offset.reset': 'earliest'
 }
 
@@ -38,7 +38,7 @@ def consume_messages():
                 msg_string = msg.value().decode('utf-8')
                 logger.info(f"Received message: {msg_string} from {
                             msg.topic()} [{msg.partition()}]")
-                write_to_file(msg_string)
+                write_to_file(msg_string, consumer_id = id)
 
     except KafkaException as e:
         logger.error(f"Failed to consume messages: {e}")

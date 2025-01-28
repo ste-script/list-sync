@@ -12,6 +12,7 @@ replication_options = {
     "include-schemas": "false",
     "include-types": "false",
     "include-transaction": "false",
+    "include-pk": "true"
 }
 try:
     # test_decoding produces textual output
@@ -23,15 +24,28 @@ except psycopg2.ProgrammingError:
                           options=replication_options)
 
 
+def find_key(list, key_name='id'):
+    for key in list:
+        if key['name'] == 'id':
+            return key['value']
+    raise Exception("Key not found")
+
+
 class DemoConsumer(object):
     def __call__(self, msg):
-        payload = msg.payload
-        # Extract the key from the payload
-        key = json.loads(payload)['identity'][0]['value']
-        key = str(key).encode('utf-8')
-        # this ensures same row is sent to same partition avoiding out of order messages
-        send_message(payload, key)
-        msg.cursor.send_feedback(flush_lsn=msg.data_start)
+        try:
+            payload = msg.payload
+            # Extract the key from the payload
+            json_value = json.loads(payload)
+            key_name = json_value['pk'][0]['name']
+            key_value = find_key(json_value['columns'], key_name)
+            key = str(key_value).encode('utf-8')
+            # this ensures same row is sent to same partition avoiding out of order messages
+            send_message(payload, key)
+            msg.cursor.send_feedback(flush_lsn=msg.data_start)
+        except Exception as e:
+            print(f"Error processing message: {e}", file=sys.stderr)
+            msg.cursor.send_feedback(flush_lsn=msg.data_start)
 
 
 democonsumer = DemoConsumer()
