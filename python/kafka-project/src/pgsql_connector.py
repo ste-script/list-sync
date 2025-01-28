@@ -26,13 +26,11 @@ except psycopg2.ProgrammingError:
 class DemoConsumer(object):
     def __call__(self, msg):
         payload = msg.payload
-        if payload.startswith('BEGIN'):
-            print("Transaction started")
-        elif payload.startswith('COMMIT'):
-            print("Transaction committed")
-        else:
-            print(json.loads(payload))
-            send_message(payload)
+        # Extract the key from the payload
+        key = json.loads(payload)['identity'][0]['value']
+        key = str(key).encode('utf-8')
+        # this ensures same row is sent to same partition avoiding out of order messages
+        send_message(payload, key)
         msg.cursor.send_feedback(flush_lsn=msg.data_start)
 
 

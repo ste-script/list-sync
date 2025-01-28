@@ -15,13 +15,12 @@ producer = Producer(conf)
 def delivery_report(err, msg):
     if err:
         print(f"Message delivery failed: {err}")
-    else:
-        print(f"Message delivered to {msg.topic()} [{msg.partition()}]")
 
 
-def send_message(msg):
+def send_message(msg, key):
     try:
-        producer.produce("wal", value=msg, on_delivery=delivery_report)
+        producer.produce(topic="wal", value=msg, key=key,
+                         on_delivery=delivery_report)
         producer.poll(0)
     except KafkaException as e:
         print(f"Failed to produce message: {e}")
