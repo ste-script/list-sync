@@ -18,7 +18,7 @@ mysql_config = {
 }
 
 # Database and table configuration
-DATABASE = 'example_db'
+DATABASE = 'exampledb'
 TABLE = 'example_table'
 
 def fetch_primary_key_columns(host, port, user, password, db, table):
