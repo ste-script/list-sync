@@ -32,13 +32,10 @@ def consume_messages():
                 if msg.error().code() == KafkaError._PARTITION_EOF:
                     logger.info(f"End of partition reached {msg.partition()}")
                 else:
-                    logger.error(f"Error: {msg.error()}")
                     raise KafkaException(msg.error())
             else:
                 msg_string = msg.value().decode('utf-8')
-                logger.info(f"Received message: {msg_string} from {
-                            msg.topic()} [{msg.partition()}]")
-                write_to_file(msg_string, consumer_id = id)
+                write_to_file(msg_string, consumer_id=id)
 
     except KafkaException as e:
         logger.error(f"Failed to consume messages: {e}")

@@ -38,7 +38,12 @@ class DemoConsumer(object):
             # Extract the key from the payload
             json_value = json.loads(payload)
             key_name = json_value['pk'][0]['name']
-            key_value = find_key(json_value['columns'], key_name)
+            if 'columns' in json_value:
+                key_value = find_key(json_value['columns'], key_name)
+            elif 'identity' in json_value:
+                key_value = find_key(json_value['identity'], key_name)
+            else:
+                raise Exception("Neither 'columns' nor 'identity' found in payload")
             key = str(key_value).encode('utf-8')
             # this ensures same row is sent to same partition avoiding out of order messages
             send_message(payload, key)
@@ -52,7 +57,7 @@ democonsumer = DemoConsumer()
 
 print("Starting streaming, press Control-C to end...", file=sys.stderr)
 try:
-    #cur.execute("ALTER TABLE public.example_table REPLICA IDENTITY FULL;")
+    # cur.execute("ALTER TABLE public.example_table REPLICA IDENTITY FULL;")
     cur.consume_stream(democonsumer)
 except KeyboardInterrupt:
     cur.close()
