@@ -1,0 +1,23 @@
+services:
+  seeder:
+    restart: always
+    build:
+      context: ./python/kafka-project
+      dockerfile: Dockerfile
+    privileged: true
+    volumes:
+      - type: bind
+        read_only: false
+        source: ./python/kafka-project/test
+        target: /app/test
+        bind:
+          propagation: shared
+          selinux: z
+    working_dir: /app
+    command: "sleep infinity"
+    networks:
+      - list-sync-net
+
+networks:
+  list-sync-net:
+    driver: bridge

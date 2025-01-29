@@ -1,0 +1,41 @@
+services:
+  db:
+    build:
+      context: mysql
+      dockerfile: Dockerfile
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: exampledb
+      MYSQL_USER: exampleuser
+      MYSQL_PASSWORD: examplepass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    restart: unless-stopped
+  producer:
+    build:
+      context: ./python/kafka-project
+      dockerfile: Dockerfile
+    depends_on:
+      - broker1      
+    volumes:
+      - type: bind
+        read_only: false
+        source: ./python/kafka-project/src
+        target: /app/src
+        bind:
+          propagation: shared
+          selinux: z
+    working_dir: /app
+    command: "poetry run python src/mysql_connector.py"
+    networks:
+      - list-sync-net
+
+volumes:
+  pgdata:
+
+networks:
+  list-sync-net:
+    driver: bridge

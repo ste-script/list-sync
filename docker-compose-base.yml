@@ -3,7 +3,7 @@ services:
     image: apache/kafka:3.9.0
     container_name: broker1
     depends_on:
-      - pgsql
+      - db
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
@@ -24,7 +24,7 @@ services:
     image: apache/kafka:3.9.0
     container_name: broker2
     depends_on:
-      - pgsql
+      - db
     environment:
       KAFKA_NODE_ID: 2
       KAFKA_PROCESS_ROLES: broker,controller
@@ -45,7 +45,7 @@ services:
     image: apache/kafka:3.9.0
     container_name: broker3
     depends_on:
-      - pgsql
+      - db
     environment:
       KAFKA_NODE_ID: 3
       KAFKA_PROCESS_ROLES: broker,controller
@@ -59,39 +59,6 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_NUM_PARTITIONS: 3
-    networks:
-      - list-sync-net
-  pgsql:
-    build:
-      context: pgsql
-      dockerfile: Dockerfile
-    container_name: pgsql
-    ports:
-      - 5432:5432
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: postgres
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    networks:
-      - list-sync-net
-  producer:
-    build:
-      context: ./python/kafka-project
-      dockerfile: Dockerfile
-    depends_on:
-      - broker1      
-    volumes:
-      - type: bind
-        read_only: false
-        source: ./python/kafka-project/src
-        target: /app/src
-        bind:
-          propagation: shared
-          selinux: z
-    working_dir: /app
-    command: "poetry run python src/pgsql_connector.py"
     networks:
       - list-sync-net
   consumer:
@@ -112,24 +79,6 @@ services:
           selinux: z
     working_dir: /app
     command: "poetry run python src/consumer.py"
-    networks:
-      - list-sync-net
-  seeder:
-    restart: always
-    build:
-      context: ./python/kafka-project
-      dockerfile: Dockerfile
-    privileged: true
-    volumes:
-      - type: bind
-        read_only: false
-        source: ./python/kafka-project/test
-        target: /app/test
-        bind:
-          propagation: shared
-          selinux: z
-    working_dir: /app
-    command: "sleep infinity"
     networks:
       - list-sync-net
 

@@ -1,0 +1,42 @@
+services:
+  db:
+    build:
+      context: pgsql
+      dockerfile: Dockerfile
+    container_name: pgsql
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - list-sync-net
+
+  producer:
+    build:
+      context: ./python/kafka-project
+      dockerfile: Dockerfile
+    depends_on:
+      - broker1
+    volumes:
+      - type: bind
+        read_only: false
+        source: ./python/kafka-project/src
+        target: /app/src
+        bind:
+          propagation: shared
+          selinux: z
+    working_dir: /app
+    command: "poetry run python src/pgsql_connector.py"
+    networks:
+      - list-sync-net
+
+volumes:
+  pgdata:
+
+networks:
+  list-sync-net:
+    driver: bridge
