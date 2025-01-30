@@ -1,6 +1,7 @@
 import sys
 import json
 from producer import send_message
+from datetime import datetime
 from pymysqlreplication import BinLogStreamReader
 from pymysqlreplication.row_event import (
     DeleteRowsEvent,
@@ -20,6 +21,7 @@ mysql_config = {
 # Database and table configuration
 DATABASE = 'exampledb'
 TABLE = 'example_table'
+
 
 def fetch_primary_key_columns(host, port, user, password, db, table):
     """Retrieve primary key columns for the specified table."""
@@ -42,6 +44,7 @@ def fetch_primary_key_columns(host, port, user, password, db, table):
     cursor.close()
     conn.close()
     return pk_columns
+
 
 # Get primary key columns for the target table
 pk_columns = fetch_primary_key_columns(
@@ -67,6 +70,7 @@ stream = BinLogStreamReader(
     only_schemas=[DATABASE]
 )
 
+
 def process_event(event, row):
     """Process individual binlog event row and generate Kafka message."""
     # Determine event type and extract values
@@ -83,7 +87,7 @@ def process_event(event, row):
         values = row['values']
         pk_data = {col: values[col] for col in pk_columns}
     else:
-        return None, None
+        raise ValueError(f"Unsupported event type: {event}")
 
     # Construct payload matching PostgreSQL wal2json format
     payload = {
@@ -93,15 +97,17 @@ def process_event(event, row):
         'columns': [{'name': k, 'value': v} for k, v in values.items()],
         'pk': [{'name': col, 'value': pk_data[col]} for col in pk_columns]
     }
-    
+
     # Serialize payload and extract primary key
     payload_json = json.dumps(payload)
     try:
-        key = str(next(item['value'] for item in payload['pk'] if item['name'] == 'id'))
+        key = str(next(item['value']
+                  for item in payload['pk'] if item['name'] == 'id'))
     except StopIteration:
         raise ValueError("Primary key 'id' not found in payload")
-    
+
     return payload_json, key.encode()
+
 
 print("Starting MySQL replication stream...", file=sys.stderr)
 try:
