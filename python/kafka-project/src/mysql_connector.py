@@ -23,6 +23,13 @@ DATABASE = 'exampledb'
 TABLE = 'example_table'
 
 
+class DateTimeEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        return super(DateTimeEncoder, self).default(obj)
+
+
 def fetch_primary_key_columns(host, port, user, password, db, table):
     """Retrieve primary key columns for the specified table."""
     conn = mysql.connector.connect(
@@ -74,32 +81,47 @@ stream = BinLogStreamReader(
 def process_event(event, row):
     """Process individual binlog event row and generate Kafka message."""
     # Determine event type and extract values
+    print(f"Processing event: {row}", file=sys.stderr)
     if isinstance(event, WriteRowsEvent):
         action = 'I'
         values = row['values']
         pk_data = {col: values[col] for col in pk_columns}
     elif isinstance(event, UpdateRowsEvent):
         action = 'U'
-        values = row['after_values']
+        row['values'] = row['after_values']
         pk_data = {col: row['before_values'][col] for col in pk_columns}
     elif isinstance(event, DeleteRowsEvent):
         action = 'D'
-        values = row['values']
-        pk_data = {col: values[col] for col in pk_columns}
+        row['before_values'] = row['values']
+        del row['values']
+        pk_data = {col: row['before_values'] for col in pk_columns}
     else:
         raise ValueError(f"Unsupported event type: {event}")
 
     # Construct payload matching PostgreSQL wal2json format
+    if 'before_values' in row:
+        identity = [{'name': k, 'value': v}
+                    for k, v in row['before_values'].items()]
+    else:
+        identity = []
+
+    if 'values' in row:
+        columns = [{'name': k, 'value': v} for k, v in row['values'].items()]
+    else:
+        columns = []
+
     payload = {
         'action': action,
         'table': event.table,
         'schema': event.schema,
-        'columns': [{'name': k, 'value': v} for k, v in values.items()],
+        'columns': columns,
+        'identity': identity,
         'pk': [{'name': col, 'value': pk_data[col]} for col in pk_columns]
     }
+    print(f"Generated payload: {payload}", file=sys.stderr)
 
     # Serialize payload and extract primary key
-    payload_json = json.dumps(payload)
+    payload_json = json.dumps(payload, cls=DateTimeEncoder)
     try:
         key = str(next(item['value']
                   for item in payload['pk'] if item['name'] == 'id'))
