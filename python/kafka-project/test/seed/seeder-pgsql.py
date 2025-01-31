@@ -4,7 +4,7 @@ import string
 from psycopg2.extras import execute_values, execute_batch
 
 # Connect to the PostgreSQL database
-conn = psycopg2.connect('dbname=postgres user=postgres password=postgres host=pgsql')
+conn = psycopg2.connect('dbname=postgres user=postgres password=postgres host=db')
 cur = conn.cursor()
 
 # Function to generate random strings

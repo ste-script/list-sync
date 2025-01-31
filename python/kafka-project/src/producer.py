@@ -5,7 +5,7 @@ conf = {
     'security.protocol': 'PLAINTEXT',
     "queue.buffering.max.messages": 10000000,
     'compression.type': 'lz4',
-    'linger.ms': 300,
+    'linger.ms': 1000,
     'batch.num.messages': 1000000,
     'batch.size': 100000000,
 }

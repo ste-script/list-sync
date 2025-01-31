@@ -9,10 +9,11 @@ from pymysqlreplication.row_event import (
     WriteRowsEvent,
 )
 import mysql.connector
+import time
 
 # MySQL connection configuration
 mysql_config = {
-    'host': 'mysql',
+    'host': 'db',
     'port': 3306,
     'user': 'repl_user',
     'passwd': 'repl_password'
@@ -69,12 +70,12 @@ if not pk_columns:
 # Initialize MySQL binlog stream
 stream = BinLogStreamReader(
     connection_settings=mysql_config,
-    server_id=100,  # Unique ID for replication client
-    blocking=True,
+    server_id=101,  # Unique ID for replication client
     resume_stream=True,
     only_events=[WriteRowsEvent, UpdateRowsEvent, DeleteRowsEvent],
     only_tables=[TABLE],
-    only_schemas=[DATABASE]
+    only_schemas=[DATABASE],
+    blocking=True,
 )
 
 
