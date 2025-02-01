@@ -21,7 +21,8 @@ services:
       context: ./python/kafka-project
       dockerfile: Dockerfile
     depends_on:
-      - broker1      
+      - broker1
+      - db
     volumes:
       - type: bind
         read_only: false

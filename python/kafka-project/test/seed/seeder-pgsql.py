@@ -2,6 +2,9 @@ import psycopg2
 import random
 import string
 from psycopg2.extras import execute_values, execute_batch
+import time
+start_time = time.time()
+
 
 # Connect to the PostgreSQL database
 conn = psycopg2.connect('dbname=postgres user=postgres password=postgres host=db')
@@ -42,7 +45,6 @@ def seed_table():
                     template="(%s, %s)",
                     page_size=batch_size
                 )
-                conn.commit()
                 insert_batch = []
 
         elif action == 'update':
@@ -60,7 +62,6 @@ def seed_table():
                     update_batch,
                     page_size=batch_size
                 )
-                conn.commit()
                 update_batch = []
 
         elif action == 'delete':
@@ -79,7 +80,6 @@ def seed_table():
                         delete_batch,
                         page_size=batch_size
                     )
-                    conn.commit()
                     delete_batch = []
 
     # Process remaining batches
@@ -107,9 +107,13 @@ def seed_table():
         )
 
     conn.commit()
+    seed_time = time.time() - start_time
     print(f"Inserted rows: {insert_count}")
     print(f"Updated rows: {update_count}")
     print(f"Deleted rows: {delete_count}")
+    print (f"Time taken to seed the table: {seed_time:.2f} seconds")
+
+
 
 # Seed the table
 seed_table()

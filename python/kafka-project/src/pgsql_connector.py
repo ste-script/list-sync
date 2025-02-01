@@ -26,7 +26,7 @@ except psycopg2.ProgrammingError:
 
 def find_key(list, key_name='id'):
     for key in list:
-        if key['name'] == 'id':
+        if key['name'] == key_name:
             return key['value']
     raise Exception("Key not found")
 
