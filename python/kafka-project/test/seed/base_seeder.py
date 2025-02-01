@@ -1,34 +1,27 @@
-import mysql.connector
 import random
 import string
-from mysql.connector import Error
 import time
-
 start_time = time.time()
 
-# Connect to the MySQL database
-conn = mysql.connector.connect(
-    host='db',
-    user='root',
-    password='rootpassword',
-    database='exampledb'
-)
-cur = conn.cursor()
 
 def random_string(length):
     # Local binding for performance
     letters = string.ascii_lowercase
     return ''.join(random.choices(letters, k=length))
 
-def seed_table():
+
+def seed_table(conn):
+    cur = conn.cursor()
     # Counters for diagnostics
     insert_count = 0
     update_count = 0
     delete_count = 0
 
     # Retrieve existing IDs once
-    cur.execute("SELECT id FROM example_table")
+    print("Retrieving existing IDs")
+    cur.execute("SELECT id FROM example_table limit 1000000")
     existing_ids = [row[0] for row in cur.fetchall()]
+    print("Retrieved existing IDs")
 
     # Increase the batch size to reduce commit overhead.
     batch_size = 1000
@@ -42,12 +35,13 @@ def seed_table():
 
     # Pre-generate random actions.
     # Note: The original code gave twice as many chances for 'insert'
-    actions = random.choices(['insert', 'update', 'insert', 'delete'], k=total_iterations)
+    actions = random.choices(
+        ['insert', 'update', 'insert', 'delete'], k=total_iterations)
     # Pre-generate random domain lengths for inserts only.
     # (We generate a list long enough; we won’t use more than needed.)
     domain_lengths = [random.randint(20, 50) for _ in range(total_iterations)]
     domain_length_index = 0
-
+    print("Starting to seed the table")
     for action in actions:
         if action == 'insert':
             category = random_string(5)
@@ -120,10 +114,6 @@ def seed_table():
     print(f"Inserted rows: {insert_count}")
     print(f"Updated rows: {update_count}")
     print(f"Deleted rows: {delete_count}")
-    print (f"Time taken to seed the table: {seed_time:.2f} seconds")
-
-try:
-    seed_table()
-finally:
+    print(f"Time taken to seed the table: {seed_time:.2f} seconds")
     cur.close()
     conn.close()
