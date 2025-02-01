@@ -77,8 +77,15 @@ services:
         bind:
           propagation: shared
           selinux: z
+      - type: bind
+        read_only: false
+        source: ./python/kafka-project/test/data
+        target: /app/test/data
+        bind:
+          propagation: shared
+          selinux: z
     working_dir: /app
-    command: "poetry run python src/consumer.py"
+    command: "poetry run python src/consumer.py simulate"
     networks:
       - list-sync-net
 

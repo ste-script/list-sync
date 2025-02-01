@@ -4,6 +4,7 @@ import logging
 import uuid
 import subprocess
 from csv_writer import write_to_file
+import sys
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -60,5 +61,6 @@ def set_network_latency():
 
 
 if __name__ == "__main__":
-    set_network_latency()
+    if len(sys.argv) > 1 and sys.argv[1] == 'simulate':
+        set_network_latency()
     consume_messages()

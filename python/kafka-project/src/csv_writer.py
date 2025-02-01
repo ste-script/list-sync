@@ -2,7 +2,7 @@ import csv
 import json
 
 
-def write_to_file(json_data: str, file_name='./src/output.csv', consumer_id='', split_updates=True, split_files=False):
+def write_to_file(json_data: str, file_name='./test/data/output', consumer_id='', split_updates=True, split_files=False):
     file_name = f'{file_name}_{consumer_id}.csv'
     json_data = json.loads(json_data)
     with open(file_name, 'a', newline='') as file:
