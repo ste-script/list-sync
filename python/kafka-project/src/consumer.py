@@ -3,7 +3,7 @@ from confluent_kafka import Consumer, KafkaException, KafkaError
 import logging
 import uuid
 import subprocess
-from csv_writer import write_to_file
+from csv_writer import CsvWriter
 import sys
 
 # Configure logging
@@ -18,7 +18,7 @@ conf = {
 }
 
 consumer = Consumer(conf)
-
+writer = CsvWriter()
 
 def consume_messages():
     try:
@@ -36,7 +36,7 @@ def consume_messages():
                     raise KafkaException(msg.error())
             else:
                 msg_string = msg.value().decode('utf-8')
-                write_to_file(msg_string, consumer_id=id)
+                writer.write_to_file(msg_string, consumer_id=id.__str__())
 
     except KafkaException as e:
         logger.error(f"Failed to consume messages: {e}")

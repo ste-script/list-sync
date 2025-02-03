@@ -2,59 +2,63 @@ import csv
 import json
 
 
-def write_to_file(json_data: str, file_name='./test/data/output', consumer_id='', split_updates=True, split_files=False):
-    file_name = f'{file_name}_{consumer_id}.csv'
-    json_data = json.loads(json_data)
-    with open(file_name, 'a', newline='') as file:
-        writer = csv.writer(file)
-        action = json_data['action']
-        if file.tell() == 0:
-            write_header(json_data, writer)
+class CsvWriter:
 
+    def write_to_file(self, json_data: str, file_name='./test/data/output', consumer_id='', split_updates=True, split_files=True):
+        self.filename = file_name
+        self.consumer_id = consumer_id
+        json_data = json.loads(json_data)
+        action = json_data['action']
         if action == 'U':
             if split_updates:
-                split_update(json_data, writer)
+                self.split_update(json_data)
                 return
-            write_update(json_data, writer)
+            self.write_update(json_data)
             return
 
         if action == 'D':
-            write_delete(json_data, writer)
+            self.write_delete(json_data)
             return
 
         if action == 'I':
-            write_insert(json_data, writer)
+            self.write_insert(json_data)
             return
 
+    def check_and_write_header(self, json_data, file_name):
+        with open(file_name, 'a', newline='') as file:
+            if file.tell() != 0:
+                return
+            writer = csv.writer(file)
+            if json_data['action'] != 'I':
+                header = ['action', 'table'] + [col['name']
+                                                for col in json_data['identity']]
+            else:
+                header = ['action', 'table'] + [col['name']
+                                                for col in json_data['columns']]
+            writer.writerow(header)
 
-def write_header(json_data, writer):
-    if json_data['action'] != 'I':
-        header = ['action', 'table'] + [col['name']
-                                        for col in json_data['identity']]
-    else:
-        header = ['action', 'table'] + [col['name']
-                                        for col in json_data['columns']]
-    writer.writerow(header)
+    def write_update(self, row):
+        self.write_action(row, 'U', 'columns')
 
+    def split_update(self, row):
+        self.write_delete(row)
+        self.write_insert(row)
 
-def write_update(row, writer):
-    write_action(row, writer, 'U', 'columns')
+    def write_insert(self, row):
+        self.write_action(row, 'I', 'columns')
 
+    def write_delete(self, row):
+        self.write_action(row, 'D', 'identity')
 
-def split_update(row, writer):
-    write_delete(row, writer)
-    write_insert(row, writer)
-
-
-def write_insert(row, writer):
-    write_action(row, writer, 'I', 'columns')
-
-
-def write_delete(row, writer):
-    write_action(row, writer, 'D', 'identity')
-
-
-def write_action(row, writer, action, columns_name):
-    row1 = [action]+[row['table']] + [col['value']
-                                      for col in row[columns_name]]
-    writer.writerow(row1)
+    def write_action(self, row, action, columns_name):
+        if action == 'D':
+            filename = self.filename + self.consumer_id + '_delete.csv'
+            self.check_and_write_header(row, filename)
+        else:
+            filename = self.filename + self.consumer_id + '_insert.csv'
+            self.check_and_write_header(row, filename)
+        with open(filename, 'a', newline='') as file:
+            writer = csv.writer(file)
+            row1 = [action]+[row['table']] + [col['value']
+                                              for col in row[columns_name]]
+            writer.writerow(row1)
