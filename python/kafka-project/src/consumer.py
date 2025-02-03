@@ -21,7 +21,6 @@ consumer = Consumer(conf)
 writer = CsvWriter(
     filename='./test/data/output',
     consumer_id=id.__str__(),
-    split_updates=False,
     split_files=False
 )
 
@@ -41,7 +40,7 @@ def consume_messages():
                     raise KafkaException(msg.error())
             else:
                 msg_string = msg.value().decode('utf-8')
-                writer.write_to_file(msg_string, consumer_id=id.__str__())
+                writer.write_to_file(msg_string)
 
     except KafkaException as e:
         logger.error(f"Failed to consume messages: {e}")

@@ -4,19 +4,18 @@ import json
 
 class CsvWriter:
 
-    def __init__(self, filename='./test/data/output', consumer_id='', split_updates=True, split_files=True):
-        self.filename = filename
+    def __init__(self, filename='./test/data/output', consumer_id='', split_files=True):
         self.consumer_id = consumer_id
-        self.split_updates = split_updates
         self.split_files = split_files
+        if len(consumer_id) > 0:
+            self.filename = filename + '_' + consumer_id
+        else:
+            self.filename = filename
 
     def write_to_file(self, json_data: str):
         json_data = json.loads(json_data)
         action = json_data['action']
         if action == 'U':
-            if self.split_updates:
-                self.split_update(json_data)
-                return
             self.write_update(json_data)
             return
 
@@ -42,9 +41,6 @@ class CsvWriter:
             writer.writerow(header)
 
     def write_update(self, row):
-        self.write_action(row, 'U', 'columns')
-
-    def split_update(self, row):
         self.write_delete(row)
         self.write_insert(row)
 
@@ -57,11 +53,9 @@ class CsvWriter:
     def write_action(self, row, action, columns_name):
         if self.split_files:
             if action == 'D':
-                filename = self.filename + self.consumer_id + '_delete.csv'
-            if action == 'U':
-                filename = self.filename + self.consumer_id + '_update.csv'
+                filename = self.filename + '_delete.csv'
             else:
-                filename = self.filename + self.consumer_id + '_insert.csv'
+                filename = self.filename + '_insert.csv'
         else:
             filename = self.filename + '.csv'
 
