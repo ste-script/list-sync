@@ -18,7 +18,12 @@ conf = {
 }
 
 consumer = Consumer(conf)
-writer = CsvWriter()
+writer = CsvWriter(
+    filename='./test/data/output',
+    consumer_id=id.__str__(),
+    split_updates=False,
+    split_files=False
+)
 
 def consume_messages():
     try:
