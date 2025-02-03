@@ -1,7 +1,10 @@
 services:
   broker1:
-    image: apache/kafka:3.9.0
+    build:
+      context: kafka
+      dockerfile: Dockerfile
     container_name: broker1
+    privileged: true
     depends_on:
       - db
     environment:
@@ -21,8 +24,11 @@ services:
       - list-sync-net
 
   broker2:
-    image: apache/kafka:3.9.0
+    build:
+      context: kafka
+      dockerfile: Dockerfile
     container_name: broker2
+    privileged: true
     depends_on:
       - db
     environment:
@@ -42,8 +48,11 @@ services:
       - list-sync-net
 
   broker3:
-    image: apache/kafka:3.9.0
+    build:
+      context: kafka
+      dockerfile: Dockerfile
     container_name: broker3
+    privileged: true
     depends_on:
       - db
     environment:
