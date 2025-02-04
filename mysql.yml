@@ -23,7 +23,7 @@ services:
       retries: 3
   producer:
     build:
-      context: ./python/kafka-project
+      context: ./python
       dockerfile: Dockerfile
     depends_on:
       db:
@@ -31,13 +31,13 @@ services:
     volumes:
       - type: bind
         read_only: false
-        source: ./python/kafka-project/src
-        target: /app/src
+        source: ./python/pystream/connector
+        target: /app/pystream/connector
         bind:
           propagation: shared
           selinux: z
     working_dir: /app
-    command: "poetry run python src/mysql_connector.py"
+    command: "poetry run python pystream/connector/mysql.py"
     networks:
       - list-sync-net
 

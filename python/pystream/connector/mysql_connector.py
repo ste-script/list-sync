@@ -1,12 +1,11 @@
 import sys
 import json
-import time
 from datetime import datetime
 
 import mysql.connector
 from pymysqlreplication import BinLogStreamReader
 from pymysqlreplication.row_event import DeleteRowsEvent, UpdateRowsEvent, WriteRowsEvent
-from producer import send_message
+from pystream.connector.producer import send_message
 
 # MySQL connection configuration
 MYSQL_CONFIG = {

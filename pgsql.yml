@@ -22,7 +22,7 @@ services:
 
   producer:
     build:
-      context: ./python/kafka-project
+      context: ./python
       dockerfile: Dockerfile
     depends_on:
       db:
@@ -30,13 +30,13 @@ services:
     volumes:
       - type: bind
         read_only: false
-        source: ./python/kafka-project/src
+        source: ./python
         target: /app/src
         bind:
           propagation: shared
           selinux: z
     working_dir: /app
-    command: "poetry run python src/pgsql_connector.py"
+    command: "poetry run python pystream/connector/pgsql.py"
     networks:
       - list-sync-net
 

@@ -2,13 +2,13 @@ services:
   seeder:
     restart: always
     build:
-      context: ./python/kafka-project
+      context: ./python
       dockerfile: Dockerfile
     privileged: true
     volumes:
       - type: bind
         read_only: false
-        source: ./python/kafka-project/test
+        source: ./python/test
         target: /app/test
         bind:
           propagation: shared
