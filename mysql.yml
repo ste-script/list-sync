@@ -17,7 +17,7 @@ services:
     networks:
       - list-sync-net
     healthcheck:
-      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -26,8 +26,8 @@ services:
       context: ./python/kafka-project
       dockerfile: Dockerfile
     depends_on:
-      - broker1
-      - db
+      db:
+        condition: service_healthy
     volumes:
       - type: bind
         read_only: false
