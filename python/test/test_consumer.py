@@ -1,5 +1,5 @@
-from consumer import Consumer
-from consumer.writer import CsvWriter
+from pystream.consumer import Consumer
+from pystream.consumer.writer import CsvWriter
 import unittest
 import io
 
@@ -8,7 +8,7 @@ class TestConsumer(unittest.TestCase):
         self.output = io.StringIO()
     
     def test_consume_messages(self):
-        consumer = Consumer(CsvWriter())
+        consumer = Consumer(group_id=6, writer= CsvWriter(filename='data/output'))
         consumer.consume_messages()
 
 
