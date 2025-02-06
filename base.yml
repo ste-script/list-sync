@@ -5,6 +5,8 @@ services:
       dockerfile: Dockerfile
     container_name: broker1
     privileged: true
+    ports:
+      - "9092:9092"
     depends_on:
       - db
     environment:
@@ -29,13 +31,15 @@ services:
       dockerfile: Dockerfile
     container_name: broker2
     privileged: true
+    ports:
+      - "9094:9094"
     depends_on:
       - db
     environment:
       KAFKA_NODE_ID: 2
       KAFKA_PROCESS_ROLES: broker,controller
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://broker2:9093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker2:9092,CONTROLLER://broker2:9093
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9094,CONTROLLER://broker2:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker2:9094,CONTROLLER://broker2:9093
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@broker1:9093,2@broker2:9093,3@broker3:9093
@@ -53,13 +57,15 @@ services:
       dockerfile: Dockerfile
     container_name: broker3
     privileged: true
+    ports:
+      - "9095:9095"
     depends_on:
       - db
     environment:
       KAFKA_NODE_ID: 3
       KAFKA_PROCESS_ROLES: broker,controller
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://broker3:9093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker3:9092,CONTROLLER://broker3:9093
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9095,CONTROLLER://broker3:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker3:9095,CONTROLLER://broker3:9093
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@broker1:9093,2@broker2:9093,3@broker3:9093
