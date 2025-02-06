@@ -2,7 +2,7 @@ import sys
 import psycopg2
 import psycopg2.extras
 import json
-from producer import send_message
+from pystream.connector.producer import send_message
 conn = psycopg2.connect('dbname=postgres user=postgres password=postgres host=db',
                         connection_factory=psycopg2.extras.LogicalReplicationConnection)
 cur = conn.cursor()

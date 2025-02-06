@@ -37,7 +37,7 @@ services:
           propagation: shared
           selinux: z
     working_dir: /app
-    command: "poetry run python pystream/connector/mysql.py"
+    command: "poetry run python pystream/connector/mysql_connector.py"
     networks:
       - list-sync-net
 
