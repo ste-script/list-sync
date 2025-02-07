@@ -17,7 +17,7 @@ def delivery_report(err, msg):
         print(f"Message delivery failed: {err}")
 
 
-def send_message(msg, key):
+def send_message(msg, key = None):
     try:
         producer.produce(topic="wal", value=msg, key=key,
                          on_delivery=delivery_report)

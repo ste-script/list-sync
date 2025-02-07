@@ -12,7 +12,7 @@ class CsvWriter:
         else:
             self.filename = filename
 
-    def write_to_file(self, json_data: str):
+    def write(self, json_data: str):
         json_data = json.loads(json_data)
         action = json_data['action']
         if action == 'U':

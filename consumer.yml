@@ -1,0 +1,27 @@
+services:
+  consumer:
+    build:
+      context: ./python
+      dockerfile: Dockerfile
+    deploy:
+      replicas: 3
+    privileged: true
+    volumes:
+      - type: bind
+        read_only: false
+        source: ./python/pystream
+        target: /app/pystream
+        bind:
+          propagation: shared
+          selinux: z
+      - type: bind
+        read_only: false
+        source: ./python/test/data
+        target: /app/test/data
+        bind:
+          propagation: shared
+          selinux: z
+    working_dir: /app
+    command: "poetry run python pystream/consumer/__init__.py simulate"
+    networks:
+      - list-sync-net
