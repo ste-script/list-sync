@@ -7,18 +7,6 @@ from pymysqlreplication import BinLogStreamReader
 from pymysqlreplication.row_event import DeleteRowsEvent, UpdateRowsEvent, WriteRowsEvent
 from pystream.connector.producer import send_message
 
-# MySQL connection configuration
-MYSQL_CONFIG = {
-    'host': 'db',
-    'port': 3306,
-    'user': 'repl_user',
-    'passwd': 'repl_password'
-}
-
-# Database and table configuration
-DATABASE = 'exampledb'
-TABLE = 'example_table'
-
 
 class DateTimeEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -27,117 +15,138 @@ class DateTimeEncoder(json.JSONEncoder):
         return super().default(obj)
 
 
-def fetch_primary_key_columns(host, port, user, password, db, table):
-    """Retrieve primary key columns for the specified table."""
-    query = """
-        SELECT COLUMN_NAME 
-        FROM INFORMATION_SCHEMA.COLUMNS 
-        WHERE TABLE_SCHEMA = %s 
-          AND TABLE_NAME = %s 
-          AND COLUMN_KEY = 'PRI'
-    """
-    with mysql.connector.connect(
-            host=host, port=port, user=user, password=password, database=db
-    ) as conn:
-        with conn.cursor() as cursor:
-            cursor.execute(query, (db, table))
-            pk_columns = [row[0] for row in cursor.fetchall()]
-    return pk_columns
+class MysqlConnector:
 
+    def __init__(self, conf={
+        'host': 'db',
+        'port': 3306,
+        'user': 'repl_user',
+        'passwd': 'repl_password',
+        'database': 'exampledb',
+        'table': 'example_table'
+    }):
+        self.conf = conf
+        self.pk_columns = []
 
-# Get primary key columns for the target table
-pk_columns = fetch_primary_key_columns(
-    MYSQL_CONFIG['host'],
-    MYSQL_CONFIG['port'],
-    MYSQL_CONFIG['user'],
-    MYSQL_CONFIG['passwd'],
-    DATABASE,
-    TABLE
-)
+    def fetch_primary_key_columns(self, host, port, user, password, db, table):
+        """Retrieve primary key columns for the specified table."""
+        query = """
+            SELECT COLUMN_NAME 
+            FROM INFORMATION_SCHEMA.COLUMNS 
+            WHERE TABLE_SCHEMA = %s 
+            AND TABLE_NAME = %s 
+            AND COLUMN_KEY = 'PRI'
+        """
+        with mysql.connector.connect(
+                host=host, port=port, user=user, password=password, database=db
+        ) as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(query, (db, table))
+                self.pk_columns = [row[0] for row in cursor.fetchall()]
 
-if not pk_columns:
-    raise ValueError(f"Primary key not found for {DATABASE}.{TABLE}")
+    def process_event(self, event, row):
+        """
+        Process an individual binlog event row and generate a payload
+        in a format similar to PostgreSQL's wal2json.
+        """
+        # Copy row data to avoid in-place modifications
+        row_data = row.copy()
 
-# Initialize MySQL binlog stream
-stream = BinLogStreamReader(
-    connection_settings=MYSQL_CONFIG,
-    server_id=101,  # Unique ID for replication client
-    resume_stream=True,
-    only_events=[WriteRowsEvent, UpdateRowsEvent, DeleteRowsEvent],
-    only_tables=[TABLE],
-    only_schemas=[DATABASE],
-    blocking=True,
-)
+        if isinstance(event, WriteRowsEvent):
+            action = 'I'
+            data = row_data.get('values', {})
+            pk_data = {col: data.get(col) for col in self.pk_columns}
+            before_values = None
+        elif isinstance(event, UpdateRowsEvent):
+            action = 'U'
+            # For updates, we take the "after" values as the new state
+            data = row_data.get('after_values', {})
+            pk_data = {col: row_data.get('before_values', {}).get(col)
+                       for col in self.pk_columns}
+            before_values = row_data.get('before_values', {})
+        elif isinstance(event, DeleteRowsEvent):
+            action = 'D'
+            # For deletes, only "before" values exist
+            data = None
+            before_values = row_data.get('values', {})
+            pk_data = {col: before_values.get(col) for col in self.pk_columns}
+        else:
+            raise ValueError(f"Unsupported event type: {type(event)}")
 
+        # Build identity and column payload sections
+        identity = [{'name': k, 'value': v}
+                    for k, v in (before_values or {}).items()]
+        columns = [{'name': k, 'value': v} for k, v in (data or {}).items()]
 
-def process_event(event, row):
-    """
-    Process an individual binlog event row and generate a payload
-    in a format similar to PostgreSQL's wal2json.
-    """
-    # Copy row data to avoid in-place modifications
-    row_data = row.copy()
+        payload = {
+            'action': action,
+            'table': event.table,
+            'schema': event.schema,
+            'columns': columns,
+            'identity': identity,
+            'pk': [{'name': col, 'value': pk_data.get(col)} for col in self.pk_columns]
+        }
 
-    if isinstance(event, WriteRowsEvent):
-        action = 'I'
-        data = row_data.get('values', {})
-        pk_data = {col: data.get(col) for col in pk_columns}
-        before_values = None
-    elif isinstance(event, UpdateRowsEvent):
-        action = 'U'
-        # For updates, we take the "after" values as the new state
-        data = row_data.get('after_values', {})
-        pk_data = {col: row_data.get('before_values', {}).get(col) for col in pk_columns}
-        before_values = row_data.get('before_values', {})
-    elif isinstance(event, DeleteRowsEvent):
-        action = 'D'
-        # For deletes, only "before" values exist
-        data = None
-        before_values = row_data.get('values', {})
-        pk_data = {col: before_values.get(col) for col in pk_columns}
-    else:
-        raise ValueError(f"Unsupported event type: {type(event)}")
+        payload_json = json.dumps(payload, cls=DateTimeEncoder)
 
-    # Build identity and column payload sections
-    identity = [{'name': k, 'value': v} for k, v in (before_values or {}).items()]
-    columns = [{'name': k, 'value': v} for k, v in (data or {}).items()]
+        # Determine a key from the first primary key column
+        try:
+            # Use the first primary key in pk_data (assumes 'id' or similar)
+            key_value = pk_data[self.pk_columns[0]]
+        except KeyError:
+            raise ValueError(
+                f"Primary key column {self.pk_columns[0]} not found in payload")
 
-    payload = {
-        'action': action,
-        'table': event.table,
-        'schema': event.schema,
-        'columns': columns,
-        'identity': identity,
-        'pk': [{'name': col, 'value': pk_data.get(col)} for col in pk_columns]
-    }
+        return payload_json, str(key_value).encode()
 
-    payload_json = json.dumps(payload, cls=DateTimeEncoder)
+    def connect(self):
+        topic = self.conf['topic']
+        # Get primary key columns for the target table
+        pk_columns = self.fetch_primary_key_columns(
+            self.conf['host'],
+            self.conf['port'],
+            self.conf['user'],
+            self.conf['passwd'],
+            self.conf['database'],
+            self.conf['table']
+        )
 
-    # Determine a key from the first primary key column
-    try:
-        # Use the first primary key in pk_data (assumes 'id' or similar)
-        key_value = pk_data[pk_columns[0]]
-    except KeyError:
-        raise ValueError(f"Primary key column {pk_columns[0]} not found in payload")
+        if not pk_columns:
+            raise ValueError(
+                f"Primary key not found for {self.conf['database']}.{self.conf['table']}")
 
-    return payload_json, str(key_value).encode()
+    # Initialize MySQL binlog stream
+        MYSQL_CONFIG = {
+            'host': self.conf['host'],
+            'port': self.conf['port'],
+            'user': self.conf['user'],
+            'passwd': self.conf['passwd'],
+        }
 
-
-def main():
-    print("Starting MySQL replication stream...", file=sys.stderr)
-    try:
-        for event in stream:
-            for row in event.rows:
-                try:
-                    payload, key = process_event(event, row)
-                    send_message(payload, key)
-                except Exception as e:
-                    print(f"Error processing event: {e}", file=sys.stderr)
-    except KeyboardInterrupt:
-        print("\nReplication stream stopped.", file=sys.stderr)
-    finally:
-        stream.close()
+        stream = BinLogStreamReader(
+            connection_settings=MYSQL_CONFIG,
+            server_id=101,  # Unique ID for replication client
+            resume_stream=True,
+            only_events=[WriteRowsEvent, UpdateRowsEvent, DeleteRowsEvent],
+            only_tables=[self.conf['table']],
+            only_schemas=[self.conf['database']],
+            blocking=True,
+        )
+        print("Starting MySQL replication stream...", file=sys.stderr)
+        try:
+            for event in stream:
+                for row in event.rows:
+                    try:
+                        payload, key = self.process_event(event, row)
+                        send_message(payload, key, topic=topic)
+                    except Exception as e:
+                        print(f"Error processing event: {e}", file=sys.stderr)
+        except KeyboardInterrupt:
+            print("\nReplication stream stopped.", file=sys.stderr)
+        finally:
+            stream.close()
 
 
 if __name__ == '__main__':
-    main()
+    m = MysqlConnector()
+    m.connect()

@@ -17,9 +17,9 @@ def delivery_report(err, msg):
         print(f"Message delivery failed: {err}")
 
 
-def send_message(msg, key = None):
+def send_message(msg, key=None, topic='wal'):
     try:
-        producer.produce(topic="wal", value=msg, key=key,
+        producer.produce(topic=topic, value=msg, key=key,
                          on_delivery=delivery_report)
         producer.poll(0)
     except KafkaException as e:

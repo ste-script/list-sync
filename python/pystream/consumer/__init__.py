@@ -6,7 +6,7 @@ import logging
 
 
 class Consumer:
-    def __init__(self, callback, group_id: str = uuid.uuid1(), topic: str = 'wal', boostrap_servers: str = 'broker1:9092', simulate_latency: bool = False):
+    def __init__(self, callback, group_id: str = uuid.uuid1(), topic_list: list = ['wal'], boostrap_servers: str = 'broker1:9092', simulate_latency: bool = False):
         self.logger = logging.getLogger(__name__)
         self.id = uuid.uuid1()
         self.conf = {
@@ -15,7 +15,7 @@ class Consumer:
             'group.id': group_id,
             'auto.offset.reset': 'earliest'
         }
-        self.topic = topic
+        self.topic_list = topic_list
         self.running = True
         self.consumer = KafkaConsumer(self.conf)
         self.callback = callback
@@ -25,7 +25,7 @@ class Consumer:
 
     def consume_messages(self):
         try:
-            self.consumer.subscribe(['wal'])
+            self.consumer.subscribe(self.topic_list)
             while self.running:
                 msg = self.consumer.poll(timeout=1.0)
                 if msg is None:
