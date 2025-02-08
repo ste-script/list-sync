@@ -1,16 +1,21 @@
 import mysql.connector
-import sys
-from base_seeder import seed_table
+from .base_seeder import seed_table
 
 # Connect to the MySQL database
 conn = mysql.connector.connect(
-    host='db',
+    host='localhost',
     user='root',
     password='rootpassword',
     database='exampledb'
 )
 
-try:
-    seed_table(conn)
-except Exception as e:
-    print(e, file=sys.stderr)
+
+def main():
+    try:
+        seed_table(conn)
+    except Exception as e:
+        print(e)
+
+
+if __name__ == '__main__':
+    main()

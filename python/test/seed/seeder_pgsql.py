@@ -1,6 +1,6 @@
 import psycopg2
 import sys
-from base_seeder import seed_table
+from .base_seeder import seed_table
 
 # Connect to the MySQL database
 conn = psycopg2.connect(
@@ -10,7 +10,10 @@ conn = psycopg2.connect(
     database='postgres'
 )
 
-try:
+def main():
     seed_table(conn)
-except Exception as e:
-    print(e, file=sys.stderr)
+
+
+if __name__ == '__main__':
+    main()
+

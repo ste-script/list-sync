@@ -5,8 +5,6 @@ services:
       dockerfile: Dockerfile
     container_name: broker1
     privileged: true
-    ports:
-      - "9092:9092"
     depends_on:
       - db
     environment:
@@ -23,7 +21,8 @@ services:
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_NUM_PARTITIONS: 3
     networks:
-      - list-sync-net
+      list-sync-net:
+        ipv4_address: 172.18.0.50
 
   broker2:
     build:
@@ -31,8 +30,6 @@ services:
       dockerfile: Dockerfile
     container_name: broker2
     privileged: true
-    ports:
-      - "9094:9094"
     depends_on:
       - db
     environment:
@@ -49,7 +46,8 @@ services:
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_NUM_PARTITIONS: 3
     networks:
-      - list-sync-net
+      list-sync-net:
+        ipv4_address: 172.18.0.51
 
   broker3:
     build:
@@ -57,8 +55,6 @@ services:
       dockerfile: Dockerfile
     container_name: broker3
     privileged: true
-    ports:
-      - "9095:9095"
     depends_on:
       - db
     environment:
@@ -75,8 +71,12 @@ services:
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_NUM_PARTITIONS: 3
     networks:
-      - list-sync-net
+      list-sync-net:
+        ipv4_address: 172.18.0.52
 
 networks:
   list-sync-net:
     driver: bridge
+    ipam:
+      config:
+        - subnet: "172.18.0.0/16"

@@ -108,6 +108,9 @@ def seed_table(conn):
             delete_batch
         )
 
+    cur.execute(
+        "INSERT INTO example_table (category, domain) VALUES (%s, %s)", ('stop', 'stop'))
+
     # Final commit (only one commit call here)
     conn.commit()
     seed_time = time.time() - start_time
