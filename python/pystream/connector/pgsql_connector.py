@@ -24,32 +24,37 @@ except psycopg2.ProgrammingError:
                           options=replication_options)
 
 
-def find_key(list, key_name='id'):
-    for key in list:
-        if key['name'] == key_name:
-            return key['value']
-    raise Exception("Key not found")
+def find_key(lst, key_name='id'):
+    try:
+        return next(key['value'] for key in lst if key['name'] == key_name)
+    except StopIteration:
+        raise KeyError(f"Key '{key_name}' not found")
 
 
 class DemoConsumer(object):
     def __call__(self, msg):
         try:
             payload = msg.payload
-            # Extract the key from the payload
             json_value = json.loads(payload)
+
             key_name = json_value['pk'][0]['name']
-            if 'columns' in json_value:
-                key_value = find_key(json_value['columns'], key_name)
-            elif 'identity' in json_value:
-                key_value = find_key(json_value['identity'], key_name)
+            key_sources = ('columns', 'identity')
+
+            for source in key_sources:
+                if source in json_value:
+                    key_value = find_key(json_value[source], key_name)
+                    break
             else:
-                raise Exception("Neither 'columns' nor 'identity' found in payload")
+                raise KeyError(
+                    "Neither 'columns' nor 'identity' found in payload")
+
             key = str(key_value).encode('utf-8')
-            # this ensures same row is sent to same partition avoiding out of order messages
             send_message(payload, key)
-            msg.cursor.send_feedback(flush_lsn=msg.data_start)
+
         except Exception as e:
             print(f"Error processing message: {e}", file=sys.stderr)
+
+        finally:
             msg.cursor.send_feedback(flush_lsn=msg.data_start)
 
 
@@ -60,10 +65,11 @@ try:
     # cur.execute("ALTER TABLE public.example_table REPLICA IDENTITY FULL;")
     cur.consume_stream(democonsumer)
 except KeyboardInterrupt:
-    cur.close()
-    conn.close()
     print("The slot 'pytest' still exists. Drop it with "
           "SELECT pg_drop_replication_slot('pytest'); if no longer needed.",
           file=sys.stderr)
     print("WARNING: Transaction logs will accumulate in pg_xlog "
           "until the slot is dropped.", file=sys.stderr)
+finally:
+    cur.close()
+    conn.close()

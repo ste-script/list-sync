@@ -49,53 +49,50 @@ class MysqlConnector:
         Process an individual binlog event row and generate a payload
         in a format similar to PostgreSQL's wal2json.
         """
-        # Copy row data to avoid in-place modifications
+        # Work on a copy to avoid modifying the original row.
         row_data = row.copy()
 
+        # Determine event type specifics.
         if isinstance(event, WriteRowsEvent):
             action = 'I'
             data = row_data.get('values', {})
-            pk_data = {col: data.get(col) for col in self.pk_columns}
             before_values = None
         elif isinstance(event, UpdateRowsEvent):
             action = 'U'
-            # For updates, we take the "after" values as the new state
-            data = row_data.get('after_values', {})
-            pk_data = {col: row_data.get('before_values', {}).get(col)
-                       for col in self.pk_columns}
             before_values = row_data.get('before_values', {})
+            data = row_data.get('after_values', {})
         elif isinstance(event, DeleteRowsEvent):
             action = 'D'
-            # For deletes, only "before" values exist
-            data = None
             before_values = row_data.get('values', {})
-            pk_data = {col: before_values.get(col) for col in self.pk_columns}
+            data = None
         else:
             raise ValueError(f"Unsupported event type: {type(event)}")
 
-        # Build identity and column payload sections
+        # For update and delete events, use the before-values to extract primary keys;
+        # for inserts, use the values.
+        pk_source = data if action == 'I' else before_values
+        pk_data = {col: pk_source.get(col) for col in self.pk_columns}
+
+        # Build the payload sections.
         identity = [{'name': k, 'value': v}
                     for k, v in (before_values or {}).items()]
         columns = [{'name': k, 'value': v} for k, v in (data or {}).items()]
-
         payload = {
             'action': action,
             'table': event.table,
             'schema': event.schema,
             'columns': columns,
             'identity': identity,
-            'pk': [{'name': col, 'value': pk_data.get(col)} for col in self.pk_columns]
+            'pk': [{'name': col, 'value': pk_data.get(col)} for col in self.pk_columns],
         }
-
         payload_json = json.dumps(payload, cls=DateTimeEncoder)
 
-        # Determine a key from the first primary key column
-        try:
-            # Use the first primary key in pk_data (assumes 'id' or similar)
-            key_value = pk_data[self.pk_columns[0]]
-        except KeyError:
+        # Determine a key from the first primary key column.
+        key_value = pk_data.get(self.pk_columns[0])
+        if key_value is None:
             raise ValueError(
-                f"Primary key column {self.pk_columns[0]} not found in payload")
+                f"Primary key column {self.pk_columns[0]} not found in payload"
+            )
 
         return payload_json, str(key_value).encode()
 
