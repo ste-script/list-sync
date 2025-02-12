@@ -5,7 +5,7 @@ from datetime import datetime
 import mysql.connector
 from pymysqlreplication import BinLogStreamReader
 from pymysqlreplication.row_event import DeleteRowsEvent, UpdateRowsEvent, WriteRowsEvent
-from pystream.connector.producer import send_message
+from pystream.connector.producer import Producer
 
 
 class DateTimeEncoder(json.JSONEncoder):
@@ -17,7 +17,7 @@ class DateTimeEncoder(json.JSONEncoder):
 
 class MysqlConnector:
 
-    def __init__(self, conf={
+    def __init__(self, conf: dict = {
         'host': 'db',
         'port': 3306,
         'user': 'repl_user',
@@ -25,6 +25,11 @@ class MysqlConnector:
         'database': 'exampledb',
         'table': 'example_table'
     }):
+        kafka_conf = conf.get('kafka_conf', False)
+        if kafka_conf:
+            self.producer = Producer(conf=kafka_conf)
+        else:
+            self.producer = Producer()
         self.conf = conf
         self.pk_columns = []
 
@@ -135,12 +140,13 @@ class MysqlConnector:
                 for row in event.rows:
                     try:
                         payload, key = self.process_event(event, row)
-                        send_message(payload, key, topic=topic)
+                        self.producer.send_message(payload, key, topic=topic)
                     except Exception as e:
                         print(f"Error processing event: {e}", file=sys.stderr)
         except KeyboardInterrupt:
             print("\nReplication stream stopped.", file=sys.stderr)
         finally:
+            self.producer.close()
             stream.close()
 
 

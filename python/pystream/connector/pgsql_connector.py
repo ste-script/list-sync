@@ -2,26 +2,29 @@ import sys
 import psycopg2
 import psycopg2.extras
 import json
-from pystream.connector.producer import send_message
-conn = psycopg2.connect('dbname=postgres user=postgres password=postgres host=db',
-                        connection_factory=psycopg2.extras.LogicalReplicationConnection)
-cur = conn.cursor()
-replication_options = {
-    "add-tables": "public.example_table",
-    "format-version": "2",
-    "include-schemas": "false",
-    "include-types": "false",
-    "include-transaction": "false",
-    "include-pk": "true"
-}
-try:
-    # test_decoding produces textual output
-    cur.start_replication(slot_name='pytest', decode=True,
-                          options=replication_options)
-except psycopg2.ProgrammingError:
-    cur.create_replication_slot('pytest', output_plugin='wal2json')
-    cur.start_replication(slot_name='pytest', decode=True,
-                          options=replication_options)
+from pystream.connector.producer import Producer
+class PgsqlConnector:
+    def __init__(self):
+        replication_options = {
+            "add-tables": "public.example_table",
+            "format-version": "2",
+            "include-schemas": "false",
+            "include-types": "false",
+            "include-transaction": "false",
+            "include-pk": "true"
+        }
+    def connect(self):
+        self.connection = psycopg2.connect('dbname=postgres user=postgres password=postgres host=db',
+                            connection_factory=psycopg2.extras.LogicalReplicationConnection)
+        self.cur = self.connection.cursor()
+        try:
+            # test_decoding produces textual output
+            cur.start_replication(slot_name='pytest', decode=True,
+                                options=replication_options)
+        except psycopg2.ProgrammingError:
+            cur.create_replication_slot('pytest', output_plugin='wal2json')
+            cur.start_replication(slot_name='pytest', decode=True,
+                                options=replication_options)
 
 
 def find_key(lst, key_name='id'):

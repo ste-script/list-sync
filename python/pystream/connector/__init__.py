@@ -14,7 +14,7 @@ class Connector:
                  database: str = 'exampledb',
                  table: str = 'example_table',
                  topic: str = 'wal_mysql',
-                 brokers: str = ['broker1:9092']
+                 kafka_conf: dict = ()
                  ):
         conf = {
             'host': host,
@@ -24,7 +24,7 @@ class Connector:
             'database': database,
             'table': table,
             'topic': topic,
-            'brokers': brokers
+            'kafka_conf': kafka_conf
         }
         if db_type == 'mysql':
             self.connector = MysqlConnector(conf=conf)

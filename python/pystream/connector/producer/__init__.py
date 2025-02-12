@@ -1,6 +1,6 @@
-from confluent_kafka import Producer, KafkaException
+from confluent_kafka import Producer as Kproducer, KafkaException
 
-conf = {
+_base_conf = {
     'bootstrap.servers': 'broker1:9092',
     'security.protocol': 'PLAINTEXT',
     "queue.buffering.max.messages": 10000000,
@@ -9,18 +9,23 @@ conf = {
     'batch.num.messages': 1000000,
     'batch.size': 100000000,
 }
-producer = Producer(conf)
 
 
-def delivery_report(err, msg):
-    if err:
-        print(f"Message delivery failed: {err}")
+class Producer:
+    def __init__(self, conf=_base_conf):
+        self.producer = Kproducer(conf)
 
+    def delivery_report(self, err, msg):
+        if err:
+            print(f"Message delivery failed: {err}")
 
-def send_message(msg, key=None, topic='wal'):
-    try:
-        producer.produce(topic=topic, value=msg, key=key,
-                         on_delivery=delivery_report)
-        producer.poll(0)
-    except KafkaException as e:
-        print(f"Failed to produce message: {e}")
+    def send_message(self, msg, key=None, topic='wal'):
+        try:
+            self.producer.produce(topic=topic, value=msg, key=key,
+                                  on_delivery=self.delivery_report)
+            self.producer.poll(0)
+        except KafkaException as e:
+            print(f"Failed to produce message: {e}")
+
+    def close(self):
+        self.producer.flush()
