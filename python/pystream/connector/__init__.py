@@ -1,7 +1,7 @@
 from pystream.connector.mysql_connector import MysqlConnector
-from . import pgsql_connector
+from pystream.connector.pgsql_connector import PgsqlConnector
 
-__all__ = ['mysql_connector', 'pgsql_connector']
+__all__ = ['MysqlConnector', 'PgsqlConnector']
 
 
 class Connector:
@@ -13,7 +13,6 @@ class Connector:
                  password: str = 'repl_password',
                  database: str = 'exampledb',
                  table: str = 'example_table',
-                 topic: str = 'wal_mysql',
                  kafka_conf: dict = ()
                  ):
         conf = {
@@ -23,7 +22,6 @@ class Connector:
             'passwd': password,
             'database': database,
             'table': table,
-            'topic': topic,
             'kafka_conf': kafka_conf
         }
         if db_type == 'mysql':

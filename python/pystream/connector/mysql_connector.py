@@ -102,7 +102,6 @@ class MysqlConnector:
         return payload_json, str(key_value).encode()
 
     def connect(self):
-        topic = self.conf['topic']
         # Get primary key columns for the target table
         pk_columns = self.fetch_primary_key_columns(
             self.conf['host'],
@@ -140,7 +139,7 @@ class MysqlConnector:
                 for row in event.rows:
                     try:
                         payload, key = self.process_event(event, row)
-                        self.producer.send_message(payload, key, topic=topic)
+                        self.producer.send_message(payload, key)
                     except Exception as e:
                         print(f"Error processing event: {e}", file=sys.stderr)
         except KeyboardInterrupt:
