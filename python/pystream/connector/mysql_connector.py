@@ -47,7 +47,8 @@ class MysqlConnector:
         ) as conn:
             with conn.cursor() as cursor:
                 cursor.execute(query, (db, table))
-                self.pk_columns = [row[0] for row in cursor.fetchall()]
+                pks = [row[0] for row in cursor.fetchall()]
+        return pks
 
     def process_event(self, event, row):
         """
@@ -103,7 +104,7 @@ class MysqlConnector:
 
     def connect(self):
         # Get primary key columns for the target table
-        pk_columns = self.fetch_primary_key_columns(
+        self.pk_columns = self.fetch_primary_key_columns(
             self.conf['host'],
             self.conf['port'],
             self.conf['user'],
@@ -112,9 +113,9 @@ class MysqlConnector:
             self.conf['table']
         )
 
-        if not pk_columns:
+        if not self.pk_columns:
             raise ValueError(
-                f"Primary key not found for {self.conf['database']}.{self.conf['table']}")
+                f"Primary key not found for {self.conf['database']}.{self.conf['table']} other values: {self.conf}")
 
     # Initialize MySQL binlog stream
         MYSQL_CONFIG = {
