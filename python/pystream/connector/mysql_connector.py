@@ -42,12 +42,13 @@ class MysqlConnector:
             AND TABLE_NAME = %s 
             AND COLUMN_KEY = 'PRI'
         """
-        with mysql.connector.connect(
-                host=host, port=port, user=user, password=password, database=db
-        ) as conn:
-            with conn.cursor() as cursor:
-                cursor.execute(query, (db, table))
-                pks = [row[0] for row in cursor.fetchall()]
+        conn = mysql.connector.connect(
+            host=host, port=port, user=user, password=password, database=db, auth_plugin='mysql_native_password')
+        cursor = conn.cursor()
+        cursor.execute(query, (db, table))
+        pks = [row[0] for row in cursor.fetchall()]
+        cursor.close()
+        conn.close()
         return pks
 
     def process_event(self, event, row):
