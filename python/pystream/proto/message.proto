@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package pystream;
+
+message WalMessage {
+    string key = 1;
+    bytes payload = 2;
+    int64 timestamp = 3;
+}

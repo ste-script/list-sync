@@ -1,4 +1,5 @@
 from confluent_kafka import Consumer as KafkaConsumer, KafkaException, KafkaError
+from pystream.proto.message_pb2 import WalMessage
 import uuid
 import subprocess
 import sys
@@ -37,9 +38,16 @@ class Consumer:
                     else:
                         raise KafkaException(msg.error())
                 else:
-                    msg_string = msg.value().decode('utf-8')
-                    self.callback(msg_string)
+                    # Deserialize protobuf message
+                    wal_message = WalMessage()
+                    wal_message.ParseFromString(msg.value())
 
+                    # Convert payload to string if needed
+                    payload = wal_message.payload.decode(
+                        'utf-8') if isinstance(wal_message.payload, bytes) else wal_message.payload
+
+                    # Pass both payload and metadata to callback
+                    self.callback(payload)
         except KafkaException as e:
             self.logger.error(f"Failed to consume messages: {e}")
         finally:
