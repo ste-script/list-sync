@@ -1,6 +1,6 @@
 from pystream.consumer import Consumer
 import unittest
-from seed.seeder_mysql import main
+from seed.seeder_pgsql import main
 import json
 
 

@@ -30,13 +30,13 @@ services:
     volumes:
       - type: bind
         read_only: false
-        source: ./python
-        target: /app/src
+        source: ./python/pystream/connector
+        target: /app/pystream/connector
         bind:
           propagation: shared
           selinux: z
     working_dir: /app
-    command: "poetry run python pystream/connector/pgsql.py"
+    command: "poetry run python pystream/connector/pgsql_connector.py"
     networks:
       - list-sync-net
 
