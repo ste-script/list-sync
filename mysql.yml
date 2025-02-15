@@ -1,5 +1,5 @@
 services:
-  db:
+  db-mysql:
     build:
       context: mysql
       dockerfile: Dockerfile
@@ -21,12 +21,12 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
-  producer:
+  producer-mysql:
     build:
       context: ./python
       dockerfile: Dockerfile
     depends_on:
-      db:
+      db-mysql:
         condition: service_healthy
     volumes:
       - type: bind

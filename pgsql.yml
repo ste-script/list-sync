@@ -1,5 +1,5 @@
 services:
-  db:
+  db-pgsql:
     build:
       context: pgsql
       dockerfile: Dockerfile
@@ -20,12 +20,12 @@ services:
       timeout: 5s
       retries: 3
 
-  producer:
+  producer-pgsql:
     build:
       context: ./python
       dockerfile: Dockerfile
     depends_on:
-      db:
+      db-pgsql:
         condition: service_healthy
     volumes:
       - type: bind
@@ -39,6 +39,34 @@ services:
     command: "poetry run python pystream/connector/pgsql_connector.py"
     networks:
       - list-sync-net
+  consumer-pg:
+    build:
+      context: ./python
+      dockerfile: Dockerfile
+    deploy:
+      replicas: 3
+    privileged: true
+    volumes:
+      - type: bind
+        read_only: false
+        source: ./python/pystream
+        target: /app/pystream
+        bind:
+          propagation: shared
+          selinux: z
+      - type: bind
+        read_only: false
+        source: ./python/test/data
+        target: /app/test/data
+        bind:
+          propagation: shared
+          selinux: z
+    working_dir: /app
+    command: "poetry run python pystream/consumer/__init__.py simulate wal_pg"
+    networks:
+      - list-sync-net
+
+
 
 volumes:
   pgdata:

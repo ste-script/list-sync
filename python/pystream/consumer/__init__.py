@@ -71,6 +71,10 @@ if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == 'simulate':
         simulate_latency = True
     writer = CsvWriter(consumer_id=id)
+    if len(sys.argv) > 2:
+        topic_list = sys.argv[2].split(',')
+    else:
+        topic_list = ['wal']
     c = Consumer(callback=writer.write,
-                 simulate_latency=simulate_latency, group_id=id)
+                 simulate_latency=simulate_latency, group_id=id, topic_list=topic_list)
     c.consume_messages()

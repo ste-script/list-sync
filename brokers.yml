@@ -5,8 +5,6 @@ services:
       dockerfile: Dockerfile
     container_name: broker1
     privileged: true
-    depends_on:
-      - db
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
@@ -30,8 +28,6 @@ services:
       dockerfile: Dockerfile
     container_name: broker2
     privileged: true
-    depends_on:
-      - db
     environment:
       KAFKA_NODE_ID: 2
       KAFKA_PROCESS_ROLES: broker,controller
@@ -55,8 +51,6 @@ services:
       dockerfile: Dockerfile
     container_name: broker3
     privileged: true
-    depends_on:
-      - db
     environment:
       KAFKA_NODE_ID: 3
       KAFKA_PROCESS_ROLES: broker,controller
