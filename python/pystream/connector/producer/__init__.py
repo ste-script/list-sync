@@ -8,13 +8,12 @@ _base_conf = {
     'linger.ms': 1000,
     'batch.num.messages': 1000000,
     'batch.size': 100000000,
-    'topic': 'wal'
 }
 
 
 class Producer:
-    def __init__(self, conf: dict = _base_conf):
-        self.topic = conf.pop('topic')
+    def __init__(self, conf: dict = _base_conf, topic: dict = ['wal']):
+        self.topic = topic
         self.producer = Kproducer(conf)
 
     def delivery_report(self, err, msg):
@@ -23,8 +22,9 @@ class Producer:
 
     def send_message(self, msg, key=None):
         try:
-            self.producer.produce(topic=self.topic, value=msg, key=key,
-                                  on_delivery=self.delivery_report)
+            for t in self.topic:
+                self.producer.produce(topic=t, value=msg, key=key,
+                                      on_delivery=self.delivery_report)
             self.producer.poll(0)
         except KafkaException as e:
             print(f"Failed to produce message: {e}")

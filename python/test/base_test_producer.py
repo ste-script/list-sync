@@ -1,29 +1,29 @@
-from abc import ABC, abstractmethod
+from pystream.consumer import Consumer
 import unittest
+from abc import ABC, abstractmethod
 import json
 
 
-class BaseTestProducer(ABC, unittest.TestCase):
+class BaseTestProducer(ABC):
     def setUp(self):
-        """Set up test environment - should be overridden by subclasses"""
-        pass
+        """Set up test environment"""
+        self.consumer = Consumer(
+            group_id=10,
+            callback=self.handler
+        )
 
     @abstractmethod
     def get_seeder(self):
-        """Return the appropriate seeder module for the database type"""
-        pass
+        raise NotImplementedError
 
-    def test_0_produce_messages(self):
-        """Test producing messages using the seeder"""
+    def test_0_testProduceMessages(self):
         seeder = self.get_seeder()
         seeder()
 
-    def test_1_consume_messages(self):
-        """Test consuming messages"""
+    def test_1_testConsumeMessages(self):
         self.consumer.consume_messages()
 
     def handler(self, message):
-        """Handle incoming messages"""
         val = json.loads(message)
         if 'columns' in val:
             if len(val['columns']) > 1:

@@ -18,18 +18,18 @@ class DateTimeEncoder(json.JSONEncoder):
 class MysqlConnector:
 
     def __init__(self, conf: dict = {
-        'host': 'db',
+        'host': 'db-mysql',
         'port': 3306,
         'user': 'repl_user',
         'passwd': 'repl_password',
         'database': 'exampledb',
         'table': 'example_table'
-    }):
+    }, topic: dict = ['wal']):
         kafka_conf = conf.get('kafka_conf', False)
         if kafka_conf:
-            self.producer = Producer(conf=kafka_conf)
+            self.producer = Producer(conf=kafka_conf, topic=topic)
         else:
-            self.producer = Producer()
+            self.producer = Producer(topic=topic)
         self.conf = conf
         self.pk_columns = []
 
@@ -152,5 +152,5 @@ class MysqlConnector:
 
 
 if __name__ == '__main__':
-    m = MysqlConnector()
+    m = MysqlConnector(topic=['wal_my'])
     m.connect()

@@ -8,14 +8,14 @@ class PostgreSQLTestProducer(BaseTestProducer, unittest.TestCase):
         """Set up PostgreSQL-specific test environment"""
         super().setUp()
         self.consumer = Consumer(
-            group_id=10,
+            group_id=11,
             callback=self.handler,
-            topic_list=['wal_pg']
+            topic_list=['wal_my']
         )
 
     def get_seeder(self):
         """Return the PostgreSQL seeder module"""
-        from seed.seeder_pgsql import main
+        from seed.seeder_mysql import main
         return main
 
 

@@ -5,7 +5,7 @@ import json
 from pystream.connector.producer import Producer
 
 _default_conf = {
-    "host": "db",
+    "host": "db-pgsql",
     "port": "5432",
     "user": "postgres",
     "passwd": "postgres",
@@ -15,7 +15,7 @@ _default_conf = {
 
 
 class PgsqlConnector:
-    def __init__(self, conf: dict[str, str] = _default_conf):
+    def __init__(self, conf: dict[str, str] = _default_conf, topic: dict[str, str] = ['wal']):
         self.host = conf.get('host')
         self.port = conf.get('port')
         self.user = conf.get('user')
@@ -29,7 +29,7 @@ class PgsqlConnector:
                         "include-pk": "true"}
         wal2jsonConf["add-tables"] = f"public.{self.table}"
         self.pgsqlConf = wal2jsonConf
-        self.consumer = WalConsumer(conf.get('kafka_conf', False))
+        self.consumer = WalConsumer(conf.get('kafka_conf', False), topic)
 
     def connect(self):
         self.connection = psycopg2.connect(f'dbname={self.database} user={self.user} password={self.password} host={self.host}',
@@ -59,12 +59,13 @@ class PgsqlConnector:
 
 
 class WalConsumer(object):
-    def __init__(self, kakfa_conf=False):
+    def __init__(self, kakfa_conf=False, topic=['wal']):
         if not kakfa_conf:
-            print("No Kafka configuration provided, using default configuration", file=sys.stderr)
-            self.producer = Producer()
+            print(
+                "No Kafka configuration provided, using default configuration", file=sys.stderr)
+            self.producer = Producer(topic=topic)
         else:
-            self.producer = Producer(kakfa_conf)
+            self.producer = Producer(kakfa_conf, topic)
 
     def find_key(self, lst, key_name='id'):
         try:
@@ -99,5 +100,5 @@ class WalConsumer(object):
 
 
 if __name__ == '__main__':
-    m = PgsqlConnector()
+    m = PgsqlConnector(topic=['wal_pg'])
     m.connect()
