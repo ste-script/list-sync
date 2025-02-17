@@ -12,9 +12,6 @@ def random_string(length):
 
 def seed_table(conn):
     cur = conn.cursor()
-    cur.execute(
-        "insert into example_table (category, domain) values ('start', 'start')")
-    conn.commit()
     # Counters for diagnostics
     insert_count = 0
     update_count = 0

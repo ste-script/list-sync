@@ -79,6 +79,12 @@ class MysqlConnector:
         # for inserts, use the values.
         pk_source = data if action == 'I' else before_values
         pk_data = {col: pk_source.get(col) for col in self.pk_columns}
+        # Determine a key from the first primary key column.
+        key_value = pk_data.get(self.pk_columns[0])
+        if key_value is None:
+            raise ValueError(
+                f"Primary key column {self.pk_columns[0]} not found in payload"
+            )
 
         # Build the payload sections.
         identity = [{'name': k, 'value': v}
@@ -87,20 +93,15 @@ class MysqlConnector:
         payload = {
             'action': action,
             'table': event.table,
-            'schema': event.schema,
-            'columns': columns,
-            'identity': identity,
-            'pk': [{'name': col, 'value': pk_data.get(col)} for col in self.pk_columns],
+            'pk': [{'name': col} for col in self.pk_columns],
         }
-        payload_json = json.dumps(payload, cls=DateTimeEncoder)
+        if identity.__len__() > 0:
+            payload['identity'] = identity
+        if columns.__len__() > 0:
+            payload['columns'] = columns
 
-        # Determine a key from the first primary key column.
-        key_value = pk_data.get(self.pk_columns[0])
-        if key_value is None:
-            raise ValueError(
-                f"Primary key column {self.pk_columns[0]} not found in payload"
-            )
-
+        payload_json = json.dumps(
+            payload, cls=DateTimeEncoder, indent=None, separators=(',', ':')).encode()
         return payload_json, str(key_value).encode()
 
     def connect(self):

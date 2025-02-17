@@ -1,5 +1,5 @@
 from confluent_kafka import Producer as Kproducer, KafkaException
-
+from confluent_kafka.admin import AdminClient, NewTopic
 _base_conf = {
     'bootstrap.servers': 'broker1:9092',
     'security.protocol': 'PLAINTEXT',
@@ -15,6 +15,9 @@ class Producer:
     def __init__(self, conf: dict = _base_conf, topic: dict = ['wal']):
         self.topic = topic
         self.producer = Kproducer(conf)
+        self.admin = AdminClient(conf)
+        self.admin.create_topics(
+            [NewTopic(t, num_partitions=3, replication_factor=3) for t in topic])
 
     def delivery_report(self, err, msg):
         if err:
