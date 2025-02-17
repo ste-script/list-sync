@@ -7,3 +7,4 @@ CREATE TABLE example_table (
 
 -- Create an index on the domain column
 CREATE INDEX domain_idx ON example_table (domain);
+ALTER TABLE public.example_table REPLICA IDENTITY FULL;

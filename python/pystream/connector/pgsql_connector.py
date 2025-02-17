@@ -36,7 +36,6 @@ class PgsqlConnector:
                                            connection_factory=psycopg2.extras.LogicalReplicationConnection)
         self.cur = self.connection.cursor()
         try:
-            self.cur.execute("ALTER TABLE public.example_table REPLICA IDENTITY FULL;")
             self.cur.start_replication(slot_name='pytest', decode=True,
                                        options=self.pgsqlConf)
         except psycopg2.ProgrammingError:
