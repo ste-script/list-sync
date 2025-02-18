@@ -3,7 +3,7 @@ from .base_seeder import seed_table
 
 # Connect to the MySQL database
 conn = mysql.connector.connect(
-    host='localhost',
+    host='db-mysql',
     user='root',
     password='rootpassword',
     database='exampledb'

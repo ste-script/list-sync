@@ -1,13 +1,16 @@
 mysql
-delete:
-{"action": "D", "table": "example_table", "schema": "exampledb", "columns": [], "identity": [{"name": "id", "value": 42}, {"name": "category", "value": "old_cat"}, {"name": "domain", "value": "old.domain.test"}, {"name": "timestamp", "value": "2025-02-17T15:19:39"}], "pk": [{"name": "id", "value": 42}]}
+
+delete
+{"action":"D","table":"example_table","pk":[{"name":"id"}],"identity":[{"name":"id","value":48},{"name":"category","value":"qrlwz"},{"name":"domain","value":"yheusiahrapzdmtbjorkhalpdpcmsz"},{"name":"timestamp","value":"2025-02-17T15:19:39"}],"columns":[]}
+
 insert
-{"action": "I", "table": "example_table", "columns": [{"name": "id", "value": 999452}, {"name": "category", "value": "cat"}, {"name": "domain", "value": "cat.example.test"}, {"name": "timestamp", "value": "2025-02-17T15:36:33"}], "identity": [], "pk": [{"name": "id", "value": 999452}]}
-update mysql
-{"action": "U", "table": "example_table", "schema": "exampledb", "columns": [{"name": "id", "value": 999452}, {"name": "category", "value": "new_cat"}, {"name": "domain", "value": "new.example.test"}, {"name": "timestamp", "value": "2025-02-17T15:36:33"}], "identity": [{"name": "id", "value": 999452}, {"name": "category", "value": "cat"}, {"name": "domain", "value": "cat.example.test"}, {"name": "timestamp", "value": "2025-02-17T15:36:33"}], "pk": [{"name": "id", "value": 999452}]}
+{"action":"I","table":"example_table","pk":[{"name":"id"}],"identity":[],"columns":[{"name":"id","value":999453},{"name":"category","value":"cat"},{"name":"domain","value":"test.example.test"},{"name":"timestamp","value":"2025-02-17T15:52:25"}]}
+
+update
+{"action":"U","table":"example_table","pk":[{"name":"id"}],"identity":[{"name":"id","value":999453},{"name":"category","value":"cat"},{"name":"domain","value":"test.example.test"},{"name":"timestamp","value":"2025-02-17T15:52:25"}],"columns":[{"name":"id","value":999453},{"name":"category","value":"new_cat"},{"name":"domain","value":"new.example.test"},{"name":"timestamp","value":"2025-02-17T15:52:25"}]}
+
 
 pgsql
-
 delete
 {"action":"D","table":"example_table","identity":[{"name":"id","value":3192}],"pk":[{"name":"id"}]}
 insert

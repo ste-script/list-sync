@@ -1,7 +1,5 @@
 import csv
 import json
-import sys
-
 
 class CsvWriter:
 

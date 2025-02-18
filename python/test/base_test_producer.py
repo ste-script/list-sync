@@ -1,5 +1,4 @@
 from pystream.consumer import Consumer
-import unittest
 from abc import ABC, abstractmethod
 import json
 

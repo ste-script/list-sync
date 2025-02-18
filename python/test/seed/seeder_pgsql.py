@@ -1,10 +1,9 @@
 import psycopg2
-import sys
 from .base_seeder import seed_table
 
 # Connect to the MySQL database
 conn = psycopg2.connect(
-    host='localhost',
+    host='db-pgsql',
     user='postgres',
     password='postgres',
     database='postgres'
