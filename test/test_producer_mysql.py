@@ -3,18 +3,18 @@ from pystream.consumer import Consumer
 import unittest
 
 
-class PostgreSQLTestProducer(BaseTestProducer, unittest.TestCase):
+class MysqlTestProducer(BaseTestProducer, unittest.TestCase):
     def setUp(self):
-        """Set up PostgreSQL-specific test environment"""
+        """Set up Mysql-specific test environment"""
         super().setUp()
         self.consumer = Consumer(
-            group_id=11,
+            group_id=12,
             callback=self.handler,
             topic_list=['wal_my']
         )
 
     def get_seeder(self):
-        """Return the PostgreSQL seeder module"""
+        """Return the Mysql seeder module"""
         from seed.seeder_mysql import main
         return main
 

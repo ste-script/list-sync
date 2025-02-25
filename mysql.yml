@@ -23,7 +23,7 @@ services:
       retries: 3
   producer-mysql:
     build:
-      context: ./python
+      context: .
       dockerfile: Dockerfile
     depends_on:
       db-mysql:
@@ -31,7 +31,7 @@ services:
     volumes:
       - type: bind
         read_only: false
-        source: ./python/pystream/connector
+        source: ./pystream/connector
         target: /app/pystream/connector
         bind:
           propagation: shared

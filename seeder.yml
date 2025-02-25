@@ -2,13 +2,13 @@ services:
   seeder:
     restart: always
     build:
-      context: ./python
+      context: .
       dockerfile: Dockerfile
     privileged: true
     volumes:
       - type: bind
         read_only: false
-        source: ./python/test
+        source: ./test
         target: /app/test
         bind:
           propagation: shared

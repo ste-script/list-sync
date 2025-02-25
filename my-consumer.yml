@@ -1,7 +1,7 @@
 services:
   consumer-my:
     build:
-      context: ./python
+      context: .
       dockerfile: Dockerfile
     deploy:
       replicas: 3
@@ -9,14 +9,14 @@ services:
     volumes:
       - type: bind
         read_only: false
-        source: ./python/pystream
+        source: ./pystream
         target: /app/pystream
         bind:
           propagation: shared
           selinux: z
       - type: bind
         read_only: false
-        source: ./python/test/data
+        source: ./test/data
         target: /app/test/data
         bind:
           propagation: shared

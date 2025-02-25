@@ -22,7 +22,7 @@ services:
 
   producer-pgsql:
     build:
-      context: ./python
+      context: .
       dockerfile: Dockerfile
     depends_on:
       db-pgsql:
@@ -30,7 +30,7 @@ services:
     volumes:
       - type: bind
         read_only: false
-        source: ./python/pystream/connector
+        source: ./pystream/connector
         target: /app/pystream/connector
         bind:
           propagation: shared
