@@ -1,5 +1,5 @@
 from pystream.consumer import Consumer
-from pystream.connector.producer import Producer
+from pystream.connector import Producer
 import unittest
 
 

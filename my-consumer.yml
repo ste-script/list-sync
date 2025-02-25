@@ -22,7 +22,7 @@ services:
           propagation: shared
           selinux: z
     working_dir: /app
-    command: "poetry run python pystream/consumer/__init__.py simulate wal_my"
+    command: "poetry run python pystream/consumer/consumer.py simulate wal_my"
     networks:
       - list-sync-net
 
