@@ -63,18 +63,30 @@ class Consumer:
         except subprocess.CalledProcessError as e:
             self.logger.error(f"Failed to set network latency: {e}")
 
+def fake_callback(msg):
+    with open('/dev/null', 'w') as devnull:
+        print(msg, file=devnull)
 
 if __name__ == "__main__":
     from list_sync.consumer.writer.csv_writer import CsvWriter
     id = uuid.uuid1().__str__()
     simulate_latency = False
+    writer = CsvWriter(consumer_id=id)
+    callback = writer.write
     if len(sys.argv) > 1 and sys.argv[1] == 'simulate':
         simulate_latency = True
-    writer = CsvWriter(consumer_id=id)
     if len(sys.argv) > 2:
         topic_list = sys.argv[2].split(',')
     else:
         topic_list = ['wal']
-    c = Consumer(callback=writer.write,
+
+    if len(sys.argv) > 3:
+        if sys.argv[3] == 'no-file':
+            callback = fake_callback
+
+    c = Consumer(callback=callback,
                  simulate_latency=simulate_latency, group_id=id, topic_list=topic_list)
     c.consume_messages()
+
+
+

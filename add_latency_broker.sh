@@ -5,5 +5,5 @@
 # The latency is set to 300ms so the ping time between the brokers is 600ms
 for container in $(docker ps -f name=broker -q)
 do
-    docker exec -u root $container tc qdisc add dev eth0 root netem rate 20mbit delay 300ms
+    docker exec -u root $container tc qdisc add dev eth0 root netem rate 20mbit delay 150ms
 done
