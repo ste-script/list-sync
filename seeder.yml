@@ -16,8 +16,8 @@ services:
     working_dir: /app
     command: "sleep infinity"
     networks:
-      - list-sync-net
+      - list_sync-net
 
 networks:
-  list-sync-net:
+  list_sync-net:
     driver: bridge

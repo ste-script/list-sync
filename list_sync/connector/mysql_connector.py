@@ -5,7 +5,7 @@ from datetime import datetime
 import mysql.connector
 from pymysqlreplication import BinLogStreamReader
 from pymysqlreplication.row_event import DeleteRowsEvent, UpdateRowsEvent, WriteRowsEvent
-from pystream.connector.producer import Producer
+from list_sync.connector.producer import Producer
 
 
 class DateTimeEncoder(json.JSONEncoder):

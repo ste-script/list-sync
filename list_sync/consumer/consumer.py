@@ -65,7 +65,7 @@ class Consumer:
 
 
 if __name__ == "__main__":
-    from pystream.consumer.writer.csv_writer import CsvWriter
+    from list_sync.consumer.writer.csv_writer import CsvWriter
     id = uuid.uuid1().__str__()
     simulate_latency = False
     if len(sys.argv) > 1 and sys.argv[1] == 'simulate':

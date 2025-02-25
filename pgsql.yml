@@ -13,7 +13,7 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:
-      - list-sync-net
+      - list_sync-net
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "postgres"]
       interval: 10s
@@ -30,19 +30,19 @@ services:
     volumes:
       - type: bind
         read_only: false
-        source: ./pystream/connector
-        target: /app/pystream/connector
+        source: ./list_sync/connector
+        target: /app/list_sync/connector
         bind:
           propagation: shared
           selinux: z
     working_dir: /app
-    command: "poetry run python pystream/connector/pgsql_connector.py"
+    command: "poetry run python list_sync/connector/pgsql_connector.py"
     networks:
-      - list-sync-net
+      - list_sync-net
 
 volumes:
   pgdata:
 
 networks:
-  list-sync-net:
+  list_sync-net:
     driver: bridge

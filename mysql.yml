@@ -15,7 +15,7 @@ services:
       - mysql_data:/var/lib/mysql
     restart: unless-stopped
     networks:
-      - list-sync-net
+      - list_sync-net
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
@@ -31,19 +31,19 @@ services:
     volumes:
       - type: bind
         read_only: false
-        source: ./pystream/connector
-        target: /app/pystream/connector
+        source: ./list_sync/connector
+        target: /app/list_sync/connector
         bind:
           propagation: shared
           selinux: z
     working_dir: /app
-    command: "poetry run python pystream/connector/mysql_connector.py"
+    command: "poetry run python list_sync/connector/mysql_connector.py"
     networks:
-      - list-sync-net
+      - list_sync-net
 
 volumes:
   mysql_data:
 
 networks:
-  list-sync-net:
+  list_sync-net:
     driver: bridge

@@ -2,7 +2,7 @@
 authors = [
     { name = "Stefano Babini", email = "stefano.babini5@studio.unibo.it" },
 ]
-name = "pystream"
+name = "list_sync"
 version = "0.1.0"
 description = ""
 readme = "README.md"

@@ -1,5 +1,5 @@
-from pystream.consumer import Consumer
-from pystream.connector import Producer
+from list_sync.consumer import Consumer
+from list_sync.connector import Producer
 import unittest
 
 

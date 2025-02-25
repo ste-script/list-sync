@@ -1,4 +1,4 @@
-from pystream.consumer import Consumer
+from list_sync.consumer import Consumer
 from abc import ABC, abstractmethod
 import json
 

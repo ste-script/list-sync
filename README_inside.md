@@ -1,4 +1,4 @@
-# List-Sync
+# list_sync
 
 A Python library for synchronizing database changes through Apache Kafka using Change Data Capture (CDC).
 
@@ -23,7 +23,7 @@ poetry install
 ### PostgreSQL Connector
 
 ```python
-from pystream.connector import PgsqlConnector
+from list_sync.connector import PgsqlConnector
 
 connector = PgsqlConnector(
     conf={
@@ -43,7 +43,7 @@ connector.connect()
 ### MySQL Connector
 
 ```python
-from pystream.connector import MysqlConnector
+from list_sync.connector import MysqlConnector
 
 connector = MysqlConnector(
     conf={
@@ -63,8 +63,8 @@ connector.connect()
 ### Consumer Usage
 
 ```python
-from pystream.consumer import Consumer
-from pystream.consumer.writer import CsvWriter
+from list_sync.consumer import Consumer
+from list_sync.consumer.writer import CsvWriter
 
 writer = CsvWriter(filename='./output')
 consumer = Consumer(

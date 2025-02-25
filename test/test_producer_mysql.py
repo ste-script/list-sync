@@ -1,5 +1,5 @@
 from base_test_producer import BaseTestProducer
-from pystream.consumer import Consumer
+from list_sync.consumer import Consumer
 import unittest
 
 

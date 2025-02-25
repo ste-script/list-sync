@@ -1,10 +1,10 @@
-# List-Sync
+# list_sync
 
 - [Stefano Babini](mailto:stefano.babini@studio.unibo.it)
 
 ## Abstract
 
-List-Sync is a Python-based system designed for Change Data Capture (CDC) from relational databases to Apache Kafka. It supports both MySQL and PostgreSQL as data sources, providing real-time streaming of database changes through a distributed system architecture while maintaining data consistency and fault tolerance.
+list_sync is a Python-based system designed for Change Data Capture (CDC) from relational databases to Apache Kafka. It supports both MySQL and PostgreSQL as data sources, providing real-time streaming of database changes through a distributed system architecture while maintaining data consistency and fault tolerance.
 
 ## Concept
 
@@ -249,8 +249,8 @@ docker compose -f my-consumer.yml up -d
 
 ```bash
 docker compose -f seeder.yml up -d
-docker exec -it list-sync-seeder-1 poetry run python test/test_producer_pgsql.py
-docker exec -it list-sync-seeder-1 poetry run python test/test_producer_mysql.py
+docker exec -it list_sync-seeder-1 poetry run python test/test_producer_pgsql.py
+docker exec -it list_sync-seeder-1 poetry run python test/test_producer_mysql.py
 ```
 
 ## User Guide
@@ -329,9 +329,9 @@ For detailed usage instructions, refer to the Python package README.
 
 The project is organized into several modules:
 
-- Core library (python/pystream)
-- Database connectors (python/pystream/connector)
-- Consumer implementation (python/pystream/consumer)
+- Core library (python/list_sync)
+- Database connectors (python/list_sync/connector)
+- Consumer implementation (python/list_sync/consumer)
 
 The package is distributed through PyPI and can be installed using Poetry:
 

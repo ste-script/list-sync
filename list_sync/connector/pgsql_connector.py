@@ -2,7 +2,7 @@ import sys
 import psycopg2
 import psycopg2.extras
 import json
-from pystream.connector.producer import Producer
+from list_sync.connector.producer import Producer
 
 _default_conf = {
     "host": "db-pgsql",

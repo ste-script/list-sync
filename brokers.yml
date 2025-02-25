@@ -19,7 +19,7 @@ services:
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_NUM_PARTITIONS: 3
     networks:
-      list-sync-net:
+      list_sync-net:
         ipv4_address: 172.18.0.50
 
   broker2:
@@ -42,7 +42,7 @@ services:
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_NUM_PARTITIONS: 3
     networks:
-      list-sync-net:
+      list_sync-net:
         ipv4_address: 172.18.0.51
 
   broker3:
@@ -65,11 +65,11 @@ services:
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_NUM_PARTITIONS: 3
     networks:
-      list-sync-net:
+      list_sync-net:
         ipv4_address: 172.18.0.52
 
 networks:
-  list-sync-net:
+  list_sync-net:
     driver: bridge
     ipam:
       config:

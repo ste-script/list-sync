@@ -1,4 +1,4 @@
 from .base_connector import Connector
-from pystream.connector.producer import Producer
+from list_sync.connector.producer import Producer
 
 __all__ = ['Connector', 'Producer']
