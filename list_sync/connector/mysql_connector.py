@@ -24,7 +24,7 @@ class MysqlConnector:
         'passwd': 'repl_password',
         'database': 'exampledb',
         'table': 'example_table'
-    }, topic: dict = ['wal']):
+    }, topic: dict[str] = ['wal']):
         kafka_conf = conf.get('kafka_conf', False)
         if kafka_conf:
             self.producer = Producer(conf=kafka_conf, topic=topic)

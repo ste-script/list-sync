@@ -10,8 +10,7 @@ list_sync is a Python-based system designed for Change Data Capture (CDC) from r
 
 ### Type of Product
 
-- Library with command-line tools for streaming database changes
-- Web services (Kafka brokers and database connectors)
+- Library
 
 ### Use Cases
 
@@ -30,6 +29,7 @@ list_sync is a Python-based system designed for Change Data Capture (CDC) from r
 3. Support multiple concurrent consumers
 4. Output changes to CSV files
 5. Support both batch processing and real-time streaming
+6. The data produced to kafka need to use the same format from both databases
 
 ### Non-functional Requirements
 
@@ -94,13 +94,37 @@ Key benefits:
 
 ### Network Distribution
 
-```
-graph TD
-    DB[Database Servers] -->|CDC| CN[Connectors]
-    CN -->|Produce| KB[Kafka Brokers]
-    KB -->|Consume| CS[Consumers]
-    CS -->|Write| CSV[CSV Files]
-```
+#### Docker Network Isolation
+
+- All components run in Docker containers on a dedicated bridge network (`list_sync-net`)
+- Fixed IP addressing in `172.18.0.0/16` subnet
+- Brokers assigned static IPs:
+  - `broker1: 172.18.0.50`
+  - `broker2: 172.18.0.51`
+  - `broker3: 172.18.0.52`
+
+#### Component Placement
+
+- All services run on the same physical machine but in isolated containers
+- Database servers:
+  - MySQL container (`db-mysql`)
+  - PostgreSQL container (`db-pgsql`)
+- Message brokers:
+  - 3 Kafka brokers in separate containers
+  - Inter-broker latency simulated up to 300ms (600ms round-trip)
+- Connectors:
+  - MySQL connector container
+  - PostgreSQL connector container
+- Consumers:
+  - Multiple consumer containers possible
+  - Can scale horizontally up to cluster capacity
+
+#### Network Characteristics
+
+- Bandwidth limited to 20mbit/s between brokers
+- Simulated network latency of 300ms between brokers
+- All components communicate via Docker bridge network
+- Service discovery via static hostnames in Docker DNS
 
 ### Service Discovery
 
@@ -113,20 +137,25 @@ graph TD
 
 ### Domain Entities
 
-1.  DatabaseChange
+1.  Connector
 
-    - Represents a change in the source database
-    - Properties: action, table, columns, values
+    - Continuously fetch changes from the databaes
+    - Properties: database, table, kafka_conf
 
-2.  KafkaMessage
+2.  Producer
 
-    - Wraps database changes for streaming
-    - Properties: key (row ID), value (change JSON)
+    - Send the fetched data to the kafka cluster
+    - Properties: topic, kafka_conf
 
-3.  ConsumerGroup
+3.  Consumer
 
     - Groups consumers for parallel processing
     - Properties: group ID, topic subscriptions
+
+4.  Writer
+
+    - Example writer to write the file into csv files
+    - Properties: filename, consumer_id, split_files
 
 ### Domain Events
 
@@ -135,12 +164,6 @@ graph TD
     - Insert (I)
     - Update (U)
     - Delete (D)
-
-2.  Consumer Events
-
-    - Message received
-    - Batch processed
-    - CSV written
 
 ### State Information
 
@@ -164,6 +187,7 @@ graph TD
     - Asynchronous message production
     - At-least-once delivery
     - Key-based partitioning
+    - Compression
 
 3.  Kafka to Consumer
 
@@ -219,8 +243,10 @@ Performance metrics:
 
 - Consumer memory usage: ~98MB per instance
 - Test completion time (without latency): ~136 seconds
-- Data seeding time: ~60 seconds
+- Data seeding time: ~40 seconds
 - Similar performance between JSON and Protobuf formats
+
+
 
 ## Deployment
 
@@ -233,9 +259,7 @@ sudo ./load_module.sh
 2. Start services:
 
 ```bash
-docker compose -f brokers.yml up -d
-docker compose -f pgsql.yml up -d
-docker compose -f mysql.yml up -d
+docker compose -f brokers.yml -f pgsql.yml -f mysql.yml  up -d
 ```
 
 3. (Optional) Start consumers:
@@ -248,14 +272,68 @@ docker compose -f my-consumer.yml up -d
 4. Run tests:
 
 ```bash
-docker compose -f seeder.yml up -d
-docker exec -it list_sync-seeder-1 poetry run python test/test_producer_pgsql.py
-docker exec -it list_sync-seeder-1 poetry run python test/test_producer_mysql.py
+docker compose -f brokers.yml -f pgsql.yml -f mysql.yml -f seeder.yml  up -d
+docker exec -it list-sync-seeder-1 poetry run python test/test_producer_pgsql.py
+docker exec -it list-sync-seeder-1 poetry run python test/test_producer_mysql.py
 ```
 
 ## User Guide
 
-For detailed usage instructions, refer to the Python package README.
+## Installation
+
+```bash
+poetry install
+```
+
+## Quick Start
+
+### Connector
+
+```
+from list_sync.connector.base_connector import Connector
+
+# Using default values
+default_connector = Connector()
+default_connector.connect()
+
+# Using custom configuration
+custom_connector = Connector(
+    db_type='mysql',
+    host='localhost',
+    port=3306,
+    user='my_user',
+    password='my_password',
+    database='my_database',
+    table='my_table',
+    kafka_conf={
+        'bootstrap.servers': 'localhost:9092',
+        'group.id': 'my-group'
+    },
+    topic=['my_topic']
+)
+
+# Connect to the database
+custom_connector.connect()
+```
+
+### Consumer Usage
+
+Multiple consumers can be initialized at the same time to pull from the same topic.
+If two or more consumers have the same group_id, it is assured that each message will be processed by only one consumer in the group.
+
+```python
+from list_sync.consumer import Consumer
+from list_sync.consumer.writer import CsvWriter
+
+writer = CsvWriter(filename='./output')
+consumer = Consumer(
+    callback=writer.write,
+    group_id='my_group',
+    topic_list=['wal_pg']
+)
+
+consumer.consume_messages()
+```
 
 ### Data and Consistency Issues
 
@@ -265,7 +343,7 @@ For detailed usage instructions, refer to the Python package README.
 - Kafka topics store the change data capture events
 - CSV files store the output from consumers
 
-#### Storage Implementation
+#### Test storage Implementation
 
 - Relational databases with tables containing:
   - id (BIGINT/BIGSERIAL PRIMARY KEY)
@@ -329,11 +407,8 @@ For detailed usage instructions, refer to the Python package README.
 
 The project is organized into several modules:
 
-- Core library (python/list_sync)
 - Database connectors (python/list_sync/connector)
 - Consumer implementation (python/list_sync/consumer)
-
-The package is distributed through PyPI and can be installed using Poetry:
 
 ```bash
 poetry install
@@ -352,7 +427,6 @@ poetry install
 
 #### Weaknesses
 
-- Documentation could be more detailed
 - More configuration options could be exposed
 - Security features could be enhanced
 - Monitoring and observability could be improved

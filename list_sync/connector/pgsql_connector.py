@@ -15,7 +15,7 @@ _default_conf = {
 
 
 class PgsqlConnector:
-    def __init__(self, conf: dict[str, str] = _default_conf, topic: dict[str, str] = ['wal']):
+    def __init__(self, conf: dict[str, str] = _default_conf, topic: dict[str] = ['wal']):
         self.host = conf.get('host')
         self.port = conf.get('port')
         self.user = conf.get('user')

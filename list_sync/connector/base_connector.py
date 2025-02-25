@@ -13,7 +13,8 @@ class Connector:
                  password: str = 'repl_password',
                  database: str = 'exampledb',
                  table: str = 'example_table',
-                 kafka_conf: dict = ()
+                 kafka_conf: dict = (),
+                 topic: dict[str] = ['wal']
                  ):
         conf = {
             'host': host,
@@ -25,9 +26,9 @@ class Connector:
             'kafka_conf': kafka_conf
         }
         if db_type == 'mysql':
-            self.connector = MysqlConnector(conf=conf)
+            self.connector = MysqlConnector(conf=conf, topic=topic)
         elif db_type == 'pgsql':
-            self.connector = PgsqlConnector(conf=conf)
+            self.connector = PgsqlConnector(conf=conf, topic=topic)
         else:
             raise ValueError(f"Unsupported database type: {db_type}")
 
