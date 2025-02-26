@@ -50,18 +50,36 @@ class Consumer:
 
     def set_network_latency(self):
         try:
-            latency = 800  # ms
+            latency = 200  # ms
             speed = 20  # mbit
-            subprocess.run(
-                f"tc qdisc add dev eth0 root netem rate {
-                    speed}mbit delay {latency}ms",
-                shell=True,
-                check=True
-            )
-            self.logger.info(f"Network latency set to {
-                latency}ms and speed to {speed}mbit")
-        except subprocess.CalledProcessError as e:
-            self.logger.error(f"Failed to set network latency: {e}")
+            
+            # First clear any existing rules
+            cleanup_commands = [
+                "tc qdisc del dev eth0 root 2>/dev/null || true",
+                "tc qdisc del dev eth0 ingress 2>/dev/null || true"
+            ]
+            
+            # Apply simpler traffic control that works in containers
+            tc_commands = [
+                # Outbound traffic control
+                f"tc qdisc add dev eth0 root netem rate {speed}mbit delay {latency}ms",
+                
+                # Add basic ingress qdisc (works in most containers)
+                "tc qdisc add dev eth0 handle ffff: ingress",
+                # Apply policing to incoming traffic
+                f"tc filter add dev eth0 parent ffff: protocol ip prio 1 u32 match ip src 0.0.0.0/0 police rate {speed}mbit burst 500k drop flowid :1"
+            ]
+            
+            # Run all commands
+            for cmd in cleanup_commands + tc_commands:
+                try:
+                    subprocess.run(cmd, shell=True, check=True)
+                except subprocess.CalledProcessError as e:
+                    self.logger.warning(f"Command failed: {cmd} - {e}")
+            
+            self.logger.info(f"Traffic control set: {latency}ms latency, {speed}mbit limit (both directions)")
+        except Exception as e:
+            self.logger.error(f"Failed to set traffic control: {e}")
 
 def fake_callback(msg):
     with open('/dev/null', 'w') as devnull:

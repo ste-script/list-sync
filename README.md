@@ -239,14 +239,91 @@ H/W path         Device         Class          Description
 /0/1                            processor      12th Gen Intel(R) Core(TM) i7-1280P
 ```
 
+docker lan speed
+
+```
+root@a03a74516591:/app# iperf -c seeder
+------------------------------------------------------------
+Client connecting to seeder, TCP port 5001
+TCP window size: 16.0 KByte (default)
+------------------------------------------------------------
+[  1] local 172.18.0.2 port 33564 connected with 172.18.0.4 port 5001 (icwnd/mss/irtt=14/1448/127)
+[ ID] Interval       Transfer     Bandwidth
+[  1] 0.0000-10.0063 sec  79.6 GBytes  68.3 Gbits/sec
+```
+
+test seeding + producing + consuming all data from kafka without network constraints
+
+```
+pystream-py3.12[ste@localhost-live]~/Documents/list-sync% docker exec -it list-sync-seeder-1 poetry run python test/test_producer_pgsql.py
+Retrieving existing IDs
+Retrieved existing IDs
+Starting to seed the table
+Inserted rows: 500566
+Updated rows: 249952
+Deleted rows: 249482
+Time taken to seed the table: 43.06 seconds
+..
+----------------------------------------------------------------------
+Ran 2 tests in 51.310s
+
+OK
+```
+
+with limitations (intto broker to broker comunication the rtt is 20ms)
+
+```
+pystream-py3.12[ste@localhost-live]~/Documents/list-sync% ./add_latency_broker.sh 
+Added bidirectional traffic control to container 403df04fdd98: 1000mbit bandwidth, 10ms latency
+Added bidirectional traffic control to container e8a158ea597e: 1000mbit bandwidth, 10ms latency
+Added bidirectional traffic control to container 70bccec8718c: 1000mbit bandwidth, 10ms latency
+```
+
+```
+broker2 to broker1
+e7aac33442a3:/$ ping broker1
+PING broker1 (172.18.0.50) 56(84) bytes of data.
+64 bytes from broker1.list-sync_list_sync-net (172.18.0.50): icmp_seq=1 ttl=64 time=20.2 ms
+64 bytes from broker1.list-sync_list_sync-net (172.18.0.50): icmp_seq=2 ttl=64 time=20.4 ms
+64 bytes from broker1.list-sync_list_sync-net (172.18.0.50): icmp_seq=3 ttl=64 time=20.3 ms
+64 bytes from broker1.list-sync_list_sync-net (172.18.0.50): icmp_seq=4 ttl=64 time=20.2 ms
+```
+
+```
+/ # iperf -c broker1
+------------------------------------------------------------
+Client connecting to broker1, TCP port 5001
+TCP window size: 16.0 KByte (default)
+------------------------------------------------------------
+[  1] local 172.18.0.51 port 41578 connected with 172.18.0.50 port 5001
+[ ID] Interval       Transfer     Bandwidth
+[  1] 0.00-10.04 sec  1.10 GBytes   941 Mbits/sec
+```
+
+```
+pystream-py3.12[ste@localhost-live]~/Documents/list-sync% docker exec -it list-sync-seeder-1 poetry run python test/test_producer_pgsql.py
+Retrieving existing IDs
+Retrieved existing IDs
+Starting to seed the table
+Inserted rows: 500048
+Updated rows: 250452
+Deleted rows: 249500
+Time taken to seed the table: 51.78 seconds
+..
+----------------------------------------------------------------------
+Ran 2 tests in 61.426s
+
+OK
+```
+
+## ..
+
 Performance metrics:
 
 - Consumer memory usage: ~98MB per instance
 - Test completion time (without latency): ~136 seconds
 - Data seeding time: ~40 seconds
 - Similar performance between JSON and Protobuf formats
-
-
 
 ## Deployment
 

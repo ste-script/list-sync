@@ -1,0 +1,11 @@
+Dockerfile*
+docker-compose*
+.dockerignore
+.git
+.gitignore
+LICENSE
+.vscode
+.editorconfig
+.idea
+*.yaml
+.venv

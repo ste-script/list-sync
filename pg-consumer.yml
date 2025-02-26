@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile
     deploy:
-      replicas: 3
+      replicas: 10
     privileged: true
     volumes:
       - type: bind
