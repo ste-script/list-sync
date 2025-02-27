@@ -239,7 +239,7 @@ H/W path         Device         Class          Description
 /0/1                            processor      12th Gen Intel(R) Core(TM) i7-1280P
 ```
 
-docker lan speed
+Docker lan speed
 
 ```
 root@a03a74516591:/app# iperf -c seeder
@@ -252,7 +252,7 @@ TCP window size: 16.0 KByte (default)
 [  1] 0.0000-10.0063 sec  79.6 GBytes  68.3 Gbits/sec
 ```
 
-test seeding + producing + consuming all data from kafka without network constraints
+Test seeding + producing + consuming all data from kafka without network constraints
 
 ```
 pystream-py3.12[ste@localhost-live]~/Documents/list-sync% docker exec -it list-sync-seeder-1 poetry run python test/test_producer_pgsql.py
@@ -270,10 +270,10 @@ Ran 2 tests in 51.310s
 OK
 ```
 
-with limitations (intto broker to broker comunication the rtt is 20ms)
+With network limitations (broker to broker rtt is 20ms)
 
 ```
-pystream-py3.12[ste@localhost-live]~/Documents/list-sync% ./add_latency_broker.sh 
+pystream-py3.12[ste@localhost-live]~/Documents/list-sync% ./add_latency_broker.sh
 Added bidirectional traffic control to container 403df04fdd98: 1000mbit bandwidth, 10ms latency
 Added bidirectional traffic control to container e8a158ea597e: 1000mbit bandwidth, 10ms latency
 Added bidirectional traffic control to container 70bccec8718c: 1000mbit bandwidth, 10ms latency
@@ -289,6 +289,8 @@ PING broker1 (172.18.0.50) 56(84) bytes of data.
 64 bytes from broker1.list-sync_list_sync-net (172.18.0.50): icmp_seq=4 ttl=64 time=20.2 ms
 ```
 
+Testing the limited network speed
+
 ```
 / # iperf -c broker1
 ------------------------------------------------------------
@@ -299,6 +301,8 @@ TCP window size: 16.0 KByte (default)
 [ ID] Interval       Transfer     Bandwidth
 [  1] 0.00-10.04 sec  1.10 GBytes   941 Mbits/sec
 ```
+
+Run the test with network speed limited
 
 ```
 pystream-py3.12[ste@localhost-live]~/Documents/list-sync% docker exec -it list-sync-seeder-1 poetry run python test/test_producer_pgsql.py
@@ -315,8 +319,56 @@ Ran 2 tests in 61.426s
 
 OK
 ```
+From now on i will only consume data from kafka brokers, i have already produced 1M row changes
+Tests results with 30 consumers (with networks limitations)
 
-## ..
+```
+ *  Executing task: docker logs --tail 1000 -f 3d44bac62b0161b8060ede2388f442080799853364d62ea4595f148b034d91f3
+
+.
+----------------------------------------------------------------------
+Ran 1 test in 48.480s
+
+OK
+```
+
+Tests results with 50 consumers (with networks limitations)
+
+```
+Executing task: docker logs --tail 1000 -f 8b9dd9e30a7f4c3d405525881ccb0f7948127ddf9873b5e170e4579775861ee4
+
+.
+----------------------------------------------------------------------
+Ran 1 test in 64.460s
+
+OK
+```
+
+Tests results with 80 consumers (my laptop was at 100% cpus)
+
+```
+Executing task: docker logs --tail 1000 -f 8b9dd9e30a7f4c3d405525881ccb0f7948127ddf9873b5e170e4579775861ee4
+
+.
+----------------------------------------------------------------------
+Ran 1 test in 78.597s
+
+OK
+```
+
+Tests results with 100 consumers. Results may not be reliable as my laptop was at its limit with RAM and 100% CPU usage, so performance might be better in real scenarios
+
+```
+Executing task: docker logs --tail 1000 -f daf55550c1eed699b106b1523cffe6c5ce786c84d5c95df12d449e0b1a503321
+
+.
+----------------------------------------------------------------------
+Ran 1 test in 93.535s
+
+OK
+```
+
+### Reference values for containers
 
 Performance metrics:
 
@@ -341,9 +393,12 @@ docker compose -f brokers.yml -f pgsql.yml -f mysql.yml  up -d
 
 3. (Optional) Start consumers:
 
+> Warning! this can cause a lot of disk writing:
+> Consumers are configured to not write on disk for now, you can change the command in the respective consumer.yml compose file to enable writing.
+
 ```bash
-docker compose -f pg-consumer.yml up -d
-docker compose -f my-consumer.yml up -d
+docker compose -f pg-consumers.yml up -d
+docker compose -f my-consumers.yml up -d
 ```
 
 4. Run tests:

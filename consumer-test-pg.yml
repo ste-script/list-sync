@@ -1,0 +1,24 @@
+services:
+  comsumer-tester:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    privileged: true
+    deploy:
+      replicas: 10
+    volumes:
+      - type: bind
+        read_only: false
+        source: ./test
+        target: /app/test
+        bind:
+          propagation: shared
+          selinux: z
+    working_dir: /app
+    command: "poetry run python test/test_consumer_pgsql.py"
+    networks:
+      - list_sync-net
+
+networks:
+  list_sync-net:
+    driver: bridge
