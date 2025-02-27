@@ -357,7 +357,7 @@ OK
 ```
 
 Tests results with 100 consumers. Results may not be reliable as my laptop was at its limit with RAM and 100% CPU usage, so performance might be better in real scenarios
-
+![htop](./images/htop.png)
 ```
 Executing task: docker logs --tail 1000 -f daf55550c1eed699b106b1523cffe6c5ce786c84d5c95df12d449e0b1a503321
 
@@ -367,6 +367,7 @@ Ran 1 test in 93.535s
 
 OK
 ```
+![docker stats command](./images/docker-stats.png)
 
 ### Reference values for containers
 
