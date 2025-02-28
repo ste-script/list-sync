@@ -422,7 +422,7 @@ poetry install
 
 ### Connector
 
-```
+```python
 from list_sync.connector.base_connector import Connector
 
 # Using default values
