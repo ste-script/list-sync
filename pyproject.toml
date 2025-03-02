@@ -4,9 +4,7 @@ authors = [
 ]
 name = "list_sync"
 version = "0.1.0"
-description = """
-list_sync is a Python-based system designed for Change Data Capture (CDC) from relational databases to Apache Kafka. It supports both MySQL and PostgreSQL as data sources, providing real-time streaming of database changes through a distributed system architecture while maintaining data consistency and fault tolerance.
-"""
+description = "list_sync is a Python-based system designed for Change Data Capture (CDC) from relational databases to Apache Kafka. It supports both MySQL and PostgreSQL as data sources, providing real-time streaming of database changes through a distributed system architecture while maintaining data consistency and fault tolerance."
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
 dependencies = [
