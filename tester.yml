@@ -1,5 +1,5 @@
 services:
-  seeder:
+  tester:
     restart: always
     build:
       context: .

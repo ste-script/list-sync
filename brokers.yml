@@ -3,7 +3,6 @@ services:
     build:
       context: kafka
       dockerfile: Dockerfile
-    container_name: broker1
     privileged: true
     environment:
       KAFKA_NODE_ID: 1
@@ -19,14 +18,12 @@ services:
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_NUM_PARTITIONS: 3
     networks:
-      list_sync-net:
-        ipv4_address: 172.18.0.50
+      - list_sync-net
 
   broker2:
     build:
       context: kafka
       dockerfile: Dockerfile
-    container_name: broker2
     privileged: true
     environment:
       KAFKA_NODE_ID: 2
@@ -42,14 +39,12 @@ services:
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_NUM_PARTITIONS: 3
     networks:
-      list_sync-net:
-        ipv4_address: 172.18.0.51
+      - list_sync-net
 
   broker3:
     build:
       context: kafka
       dockerfile: Dockerfile
-    container_name: broker3
     privileged: true
     environment:
       KAFKA_NODE_ID: 3
@@ -65,8 +60,7 @@ services:
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_NUM_PARTITIONS: 3
     networks:
-      list_sync-net:
-        ipv4_address: 172.18.0.52
+      - list_sync-net
 
 networks:
   list_sync-net:
