@@ -52,17 +52,82 @@ list_sync is a Python-based system designed for Change Data Capture (CDC) from r
 
 ### Event-Driven Architecture
 
-- Chosen for real-time change data capture and streaming requirements
-- Enables loose coupling between producers (database connectors) and consumers
-- Supports scalability through independent scaling of components
-- Facilitates fault tolerance through message persistence and replay
+### Overview
 
-Key benefits:
+Event-Driven Architecture forms the backbone of the system, providing a robust framework for handling real-time data changes and processing events across distributed components.
 
-- Asynchronous processing
-- Natural fit for database change events
-- Easy scaling of consumers
-- Built-in fault tolerance
+- **Chosen for real-time change data capture and streaming requirements**
+  - Enables immediate reaction to data changes
+  - Supports complex event processing with minimal latency
+  - Provides a foundation for real-time analytics and notifications
+
+- **Enables loose coupling between producers (database connectors) and consumers**
+  - Producers and consumers have no direct dependencies
+  - Components can evolve independently without system-wide impacts
+  - New consumers can be added without modifying producers
+
+- **Supports scalability through independent scaling of components**
+  - Each producer or consumer can scale based on its own demand
+  - Horizontal scaling possible for high-volume event processing
+  - Peak loads can be handled through temporary scaling
+
+- **Facilitates fault tolerance through message persistence and replay**
+  - Events are persisted in the event broker
+  - Consumers can replay events after recovery
+  - System can recover from failures with minimal data loss
+
+### Key Benefits
+
+- **Asynchronous processing**
+  - Non-blocking operations improve overall system performance
+  - Background processing reduces user-facing latency
+
+- **Natural fit for database change events**
+  - Direct mapping between database operations and system events
+  - Simplified implementation through event streams
+  - Historical data changes available through kafka event logs
+
+- **Easy scaling of consumers**
+  - Consumer groups allow parallel processing
+  - New processing needs accommodated through new consumers
+  - Resource allocation optimized per consumer type
+
+- **Built-in fault tolerance**
+  - At-least-once delivery guarantees
+  - Idempotent consumers handle duplicate events gracefully
+  - System resilience during partial outages
+
+### Component Interaction
+
+```mermaid
+sequenceDiagram
+    participant DB as Database
+    participant CDC as Connector
+    participant P as Producer
+    participant Broker as Kafka Broker
+    participant C1 as Consumer A
+    participant C2 as Consumer B
+    
+    DB->>CDC: Database Change
+    CDC->>CDC: Capture Change
+    CDC->>P: Send Message
+    P->>Broker: Publish Change Event
+    Broker->>C1: Deliver Event
+    Broker->>C2: Deliver Event
+    C2->>Broker: Commit consumption
+    C1->>Broker: Commit consumption
+    C1->>C1: Process Event
+    C2->>C2: Process Event
+    Note over C1,C2: Consumers process independently
+```
+
+### Implementation Considerations
+
+- **Event Schema Management**
+  - Does not use shema for flexibility
+
+- **Ordering Guarantees**
+  - Partition keys ensure related events maintain order (Based on Table Primary key)
 
 ## Infrastructure
 
@@ -96,7 +161,6 @@ Key benefits:
 #### Docker Network Isolation
 
 - All components run in Docker containers on a dedicated bridge network (`list_sync-net`)
--
 
 #### Component Placement
 
@@ -132,32 +196,126 @@ Key benefits:
 
 ### Domain Entities
 
-1.  Connector
+1.  **Connector**
     When a row change is detected it fires the row data change to the producer through producer.send_message
 
-        - Continuously fetch changes from the databaes
+        - Continuously fetch changes from the database
         - Properties: database, table, kafka_conf
 
-2.  Producer
-    Recive the data from the connector and send it to the kafka cluster.
-    The undelying librdkafka written in C handles compression and batch processing
+2.  **Producer**
+    Receive the data from the connector and send it to the Kafka cluster.
+    The underlying librdkafka written in C handles compression and batch processing
 
         - Send the fetched data to the kafka cluster
         - Properties: topic, kafka_conf
 
-3.  Consumer
-    Continuously polls data from the kafka cluster and send to the configured writer through a callback
+3.  **Consumer**
+    Continuously polls data from the Kafka cluster and send to the configured writer through a callback
 
         - Groups consumers for parallel processing
         - Properties: group ID, topic subscriptions
 
-4.  Writer
-    Recive the data from the consumer and write it to file or somwhere else.
+4.  **Writer**
+    Receive the data from the consumer and write it to file or somewhere else.
     In this project write it to two csv files, one for inserts and the other one for deletes.
     Updates are considered one delete and one insert.
 
         - Example writer to write the file into csv files
         - Properties: filename, consumer_id, split_files
+
+### Component Diagram
+
+```mermaid
+graph TD
+    subgraph Databases
+        MySQL[MySQL Database]
+        PostgreSQL[PostgreSQL Database]
+    end
+
+    subgraph Connectors
+        MySQLConnector[MySQL Connector]
+        PostgreSQLConnector[PostgreSQL Connector]
+    end
+
+    subgraph Producers
+        Producer1[Producer Instance]
+        Producer2[Producer Instance]
+    end
+
+    subgraph "Kafka Cluster"
+        KafkaBroker[Kafka Broker]
+    end
+
+    subgraph Consumers
+        Consumer1[Consumer Group 1]
+        Consumer2[Consumer Group 2]
+    end
+
+    subgraph Writers
+        CSVWriter1[CSV Writer 1]
+        CSVWriter2[CSV Writer 2]
+    end
+
+    MySQL --> MySQLConnector
+    PostgreSQL --> PostgreSQLConnector
+    
+    MySQLConnector --> Producer1
+    PostgreSQLConnector --> Producer2
+    
+    Producer1 --> KafkaBroker
+    Producer2 --> KafkaBroker
+    
+    KafkaBroker --> Consumer1
+    KafkaBroker --> Consumer2
+    
+    Consumer1 --> CSVWriter1
+    Consumer2 --> CSVWriter2
+```
+
+### Class Diagram
+
+```mermaid
+classDiagram
+    class BaseConnector {
+        <<abstract>>
+        +conf: dict
+        +producer: Producer
+        +connect()
+    }
+    
+    class MySQLConnector {
+      + producer: Producer
+    }
+    
+    class PostgreSQLConnector {
+      + producer: Producer
+    }
+    
+    class Producer {
+        +topic: str
+        +kafka_conf: dict
+        +send_message(key, value)
+    }
+    
+    class Consumer {
+        +group_id: str
+        +topics: list
+        +kafka_conf: dict
+        +callback_function: str => void
+    }
+    
+    class CSVWriter {
+        +filename: str
+        +consumer_id: str
+        +split_files: bool
+        +write(data: str): void
+    }
+    
+    BaseConnector <|-- MySQLConnector
+    BaseConnector <|-- PostgreSQLConnector
+    BaseConnector --> Producer
+    Consumer --> CSVWriter
+```
 
 ### Domain Events
 
@@ -183,6 +341,8 @@ Key benefits:
 
     - MySQL: Binary log streaming
     - PostgreSQL: Logical replication protocol
+    - Real-time change data capture (CDC)
+    - Transaction-based consistency  
 
 2.  Connector to Kafka
 
@@ -196,31 +356,214 @@ Key benefits:
     - Pull-based consumption
     - Batch processing support
     - Commit management
+    - Consumer group balancing
+    - Offset management
+
+4.  Consumer to Writer
+
+    - Callback-based processing
+    - Synchronous execution
+
+### Communication Flow Details
+
+#### Database to Connector
+- **MySQL**: Uses binary log (binlog) with row-based replication format
+- **PostgreSQL**: Uses logical decoding with wal2json plugin
+- Both provide transactional consistency boundaries
+- Each database change is captured with before/after state
+
+#### Connector to Kafka
+- Messages include schema, operation type, and row data
+- Partitioning based on primary key ensures ordering
+- Producers handle temporary broker outages with retry logic
+- Compression reduces network bandwidth requirements
+
+#### Kafka to Consumer
+- Consumers pull messages in configurable batches
+- Offset commits happen after successful processing
+- Consumer groups automatically rebalance on failure/scaling
+- Consumers manage their position in the event stream
+
+#### Consumer to Writer
+- Consumers pass data to writers via callbacks
+- Writers handle formatting and storage operations
+- CSV Writers separate inserts and deletes into different files
+
+### UML Communication Diagram
+
+```mermaid
+graph TD
+    %% Define nodes
+    MySQL[MySQL Database]
+    PostgreSQL[PostgreSQL Database]
+    MySQLConnector[MySQL Connector]
+    PostgreSQLConnector[PostgreSQL Connector]
+    KafkaBroker[Kafka Broker]
+    Consumer[Consumer]
+    Writer[Writer]
+    
+    %% Define connections with detailed labels
+    MySQL-- "1: Binary Log Stream (Row Format)" -->MySQLConnector
+    PostgreSQL-- "1: Logical Replication (wal2json)" -->PostgreSQLConnector
+    
+    MySQLConnector-- "2: Produce Message<br>(async, compressed)" -->KafkaBroker
+    PostgreSQLConnector-- "2: Produce Message<br>(async, compressed)" -->KafkaBroker
+    
+    KafkaBroker-- "3: Poll Messages<br>(batched, offset tracking)" -->Consumer
+    
+    Consumer-- "4: Process Callback<br>(synchronous)" -->Writer
+    
+    %% Add annotations
+    classDef database fill:#f9f,stroke:#333,stroke-width:2px
+    classDef connector fill:#bbf,stroke:#333,stroke-width:1px
+    classDef messaging fill:#bfb,stroke:#333,stroke-width:1px
+    classDef processor fill:#fbb,stroke:#333,stroke-width:1px
+    
+    class MySQL,PostgreSQL database
+    class MySQLConnector,PostgreSQLConnector connector
+    class KafkaBroker messaging
+    class Consumer,Writer processor
+```
+
+### Detailed Message Flow Sequence
+
+```mermaid
+sequenceDiagram
+    participant DB as Database
+    participant Conn as Connector
+    participant Prod as Producer
+    participant Kafka as Kafka Broker
+    participant Cons as Consumer
+    participant W as Writer
+    
+    DB->>Conn: Database Change Event
+    Note over DB,Conn: Binary Log or WAL event
+    
+    Conn->>Conn: Transform to Standard Format
+    Conn->>Prod: Send to Producer
+    
+    Prod->>Prod: Prepare Message
+    Note over Prod: Apply compression, set headers
+    
+    Prod->>Kafka: Produce Message
+    Note over Prod,Kafka: Async with delivery reports
+    
+    Kafka->>Kafka: Store in Topic Partition
+    
+    Cons->>Kafka: Poll for Messages
+    Kafka->>Cons: Return Message Batch
+    
+    loop For each message
+        Cons->>W: Invoke Callback
+        W->>W: Process Message
+        Note over W: Write to CSV or other destination
+        W->>Cons: Processing Complete
+    end
+    
+    Cons->>Kafka: Commit Offset
+    Note over Cons,Kafka: Explicit or auto-commit
+```
 
 ## Behaviour
 
 ### Component State Management
 
-1.  Connectors
+1.  **Connectors**
 
     - Stateful tracking of replication position
-    - Maintains database connections
-    - Buffers messages for batch sending
+      - MySQL: Tracks binlog filename and position
+      - PostgreSQL: Maintains LSN (Log Sequence Number) position
+      - Persists position information to survive restarts
+    - Does not handle schema changes unless connector restart
 
-2.  Consumers
+2.  **Producers**
+    - Handles partitioning strategy
+      - Consistent hashing on primary keys
+      - Custom partitioning for special cases
+      - Partition balancing for even distribution
+
+3.  **Consumers**
 
     - Stateful offset tracking
+      - Persists consumed offsets in Kafka
+      - Exactly-once semantics through transactional consumers
     - Handles group coordination
+      - Participates in consumer group rebalancing
+      - Implements graceful join/leave procedures
+      - Manages partition assignment strategy
+    - Manages processing state
+      - Implements ordered processing within partitions
 
-3.  Writers
+4.  **Writers**
     - Manages CSV file handles
+      - Opens/closes files based on activity
 
 ### State Updates
 
 - Database changes trigger connector events
-- Connectors update Kafka topics
-- Consumers calls writer to update CSV files
-- Consumers Offset commits maintain progress
+  - Row-level changes captured from transaction logs
+  - Changes include operation type (INSERT/UPDATE/DELETE)
+  - Before/after image of affected rows provided
+- Producers update Kafka topics
+  - Events serialized in a standardized format
+  - Headers include metadata (source DB, table, timestamp)
+  - Payload contains row data in JSON
+  - Events partitioned by primary key for ordering
+- Consumers call writer to update CSV files
+  - Transformation of Kafka messages to CSV format
+  - Separate files for different operations (insert/delete)
+  - Updates treated as delete+insert pair
+- Consumer offset commits maintain progress
+  - Commits occur after successful processing
+  - Exactly-once semantics through atomic operations
+  - Restart from last committed position after failure
+
+### Error Handling and Recovery
+
+- **Connector Failures**
+  - Automatic reconnection to database
+  - Resume from last known position
+
+- **Broker Connectivity Issues**
+  - Producer buffering during temporary outages
+
+- **Consumer Processing Errors**
+  - Configurable retry policies
+  - Manual intervention options for unrecoverable errors
+
+### System Lifecycle Management
+
+- **Startup Sequence**
+  - Components start in dependency order
+  - State restoration from persistent storage
+  - Initialization health checks
+  - Warm-up period to achieve steady state
+
+- **Scaling Operations**
+  - Consumer group rebalancing
+  - Producer connection pooling
+  - Zero-downtime scaling procedures
+  - Load distribution strategies
+
+### Performance Considerations
+
+- **Batching Optimizations**
+  - Message batching in producers
+  - Batch consumption in consumers
+  - Bulk writes to target systems
+  - Configurable batch sizes based on workload
+
+- **Resource Management**
+  - Memory utilization monitoring
+  - Thread pool management
+  - Connection pooling
+  - File descriptor usage optimization
+
+- **Throughput vs. Latency Tuning**
+  - Configurable trade-offs for different use cases
+  - Latency-sensitive vs. throughput-oriented profiles
+  - Monitoring of SLAs and performance metrics
+  - Adaptive tuning based on system load
 
 ## Data and Consistency
 
