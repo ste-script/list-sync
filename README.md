@@ -271,7 +271,7 @@ graph TD
     Consumer1 --> CSVWriter1
     Consumer2 --> CSVWriter2
 ```
-
+*Component diagram illustrating a scalable data pipeline architecture leveraging Apache Kafka for decoupled communication between heterogeneous data sources (MySQL, PostgreSQL) and downstream consumers. Producers ingest relational data via dedicated connectors, publishing to a Kafka cluster, which enables parallel processing by independent consumer groups (Consumer Group 1, 2) writing outputs to CSV sinks. The design emphasizes modularity, separation of concerns, and horizontal scalability but abstracts operational complexities.*
 ### Class Diagram
 
 ```mermaid
@@ -316,7 +316,7 @@ classDiagram
     BaseConnector --> Producer
     Consumer --> CSVWriter
 ```
-
+*This class diagram abstracts a producer-consumer pipeline for relational database streaming, emphasizing inheritance over composition.*
 ### Domain Events
 
 1.  Database Events
