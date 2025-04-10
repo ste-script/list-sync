@@ -160,19 +160,13 @@ sequenceDiagram
 
 #### Component Placement
 
-- All services run on the same physical machine but in isolated containers
-- Database servers:
-  - MySQL container (`db-mysql`)
-  - PostgreSQL container (`db-pgsql`)
-- Message brokers:
-  - 3 Kafka brokers in separate containers
-  - Inter-broker latency simulated up to 10ms (20ms round-trip)
-- Connectors:
-  - MySQL connector container
-  - PostgreSQL connector container
-- Consumers:
-  - Multiple consumer containers possible
-  - Can scale horizontally up to cluster capacity
+The system employs a consolidated deployment model where all architectural components reside on a single-node host while maintaining operational isolation through containerization. This configuration comprises two primary relational database management systems (RDBMS): a MySQL instance (db-mysql) and a PostgreSQL instance (db-pgsql), each encapsulated within dedicated containers.
+
+Event streaming functionality is facilitated by a Kafka cluster consisting of three broker instances, each operating in discrete containers to emulate distributed node behavior. Network latency conditions are simulated with a maximum inter-broker delay of 10ms (20ms round-trip time), approximating real-world distributed system characteristics.
+
+Data ingestion pipelines are managed by database-specific connectors separate containers for MySQL and PostgreSQL, responsible for continuous change detection, event serialization, and producer coordination. Downstream consumption capabilities are implemented through horizontally scalable consumer containers, which may be dynamically instantiated up to the host's resource constraints. This elasticity leverages stateless design patterns, enabling parallel processing workloads while maintaining transactional integrity through Kafka's offset management protocols.
+
+The architecture exemplifies a cost-efficient paradigm for prototyping distributed data systems, though it inherently centralizes fault domains due to shared physical infrastructure. Container isolation mitigates resource contention risks while preserving development reproducibility.
 
 #### Network Characteristics
 
@@ -312,7 +306,7 @@ classDiagram
     BaseConnector --> Producer
     Consumer --> CSVWriter
 ```
-*This class diagram abstracts a producer-consumer pipeline for relational database streaming, emphasizing inheritance over composition.*
+*This class diagram abstracts a producer-consumer pipeline for relational database streaming, prefering inheritance over composition.*
 ### Domain Events
 
 1.  Database Events
@@ -420,7 +414,7 @@ graph TD
     class KafkaBroker messaging
     class Consumer,Writer processor
 ```
-
+*Communication diagram depicting a heterogeneous database ingestion pipeline employing Kafka based event streaming. Source databases (MySQL, PostgreSQL) initiate replication via protocol-specific mechanisms: MySQL's binary log streaming (row-based) and PostgreSQL's logical replication (wal2json output plugin). Dedicated connectors serialize and asynchronously propagate change events to Kafka brokers using compressed message batches (stages 1-2). Consumers implement batched message polling with explicit offset tracking to enforce exactly-once delivery semantics (stage 3), triggering synchronous processing callbacks that interface with downstream persistence layers (stage 4). Containerized components demonstrate separation of concerns between database protocol adaptation, message routing, and stateful write operations. Color coding denotes functional roles: magenta (data sources), blue (protocol adapters), green (messaging infrastructure), and red (processing units). The architecture exemplifies a pattern for reconciling polyglot database systems into unified streaming pipelines while preserving transactional ordering within each database domain.*
 ### Detailed Message Flow Sequence
 
 ```mermaid
@@ -459,7 +453,7 @@ sequenceDiagram
     Cons->>Kafka: Commit Offset
     Note over Cons,Kafka: Explicit or auto-commit
 ```
-
+*Sequence diagram modeling a Kafka centric change data capture pipeline for heterogeneous database synchronization. The workflow initiates with database engines (MySQL/PostgreSQL) emitting low-level storage events via native mechanisms (binary log or WAL), which are captured by protocol-specific connectors. Connectors normalize events into a canonical format before asynchronous transmission to Kafka producers, which apply message compression and metadata enrichment prior to broker submission (observing non-blocking delivery semantics with confirmation callbacks). Consumers employ batched message retrieval with explicit offset management, triggering synchronous processing callbacks that interface with persistence layers (e.g., CSV writers).*
 ## Behaviour
 
 ### Component State Management
@@ -558,7 +552,7 @@ sequenceDiagram
 - **Throughput vs. Latency Tuning**
   - Configurable trade-offs for different use cases
   - Latency-sensitive vs. throughput-oriented profiles
-  - Monitoring of SLAs and performance metrics
+  - Monitoring of SLAs (Service Level Agreements) and performance metrics
   - Adaptive tuning based on system load
 
 ## Data and Consistency
