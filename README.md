@@ -14,11 +14,7 @@ list_sync is a Python-based system designed for Change Data Capture (CDC) from r
 
 ### Use Cases
 
-- Human interaction is primarily through configuration and monitoring
-- System runs continuously, capturing database changes in real-time
-- Data is stored in Kafka topics and can be consumed ad written to CSV files
-- Multiple consumers can process the same data stream independently
-
+The system is designed to facilitate human engagement predominantly through configuration management and real-time monitoring operations. It operates in a persistent, uninterrupted mode, employing real-time detection mechanisms to capture incremental modifications within the source database. Captured data streams are persistently stored within Kafka topics, a distributed event streaming platform, which facilitates subsequent consumption and programmatic exportation into CSV formatted files for analytical or archival purposes. The architecture inherently supports concurrent data processing, enabling multiple downstream consumers to independently access and manipulate identical data streams without operational interference, thereby promoting scalable and parallelized workflow integration.
 ## Requirements
 
 ### Functional Requirements
@@ -120,7 +116,7 @@ sequenceDiagram
     C2->>C2: Process Event
     Note over C1,C2: Consumers process independently
 ```
-
+*This sequence diagram models a real-time change data capture (CDC) architecture employing Apache Kafka for event streaming. The workflow begins with a database emitting state changes, which are intercepted by a dedicated CDC connector. The connector serializes changes into event messages, propagated via a Kafka producer to a centralized broker. Events are persisted in durable Kafka topics, enabling simultaneous distribution to multiple consumer instances (Consumer A and B). Consumers asynchronously process events using isolated offset tracking, committing acknowledgments to the broker post-processing to ensure exactly-once semantics. The decoupled design demonstrates Kafka's capacity to support parallel, fault-tolerant data pipelines, with independent consumer groups processing identical streams for scalable workload distribution.*
 ### Implementation Considerations
 
 - **Event Schema Management**
