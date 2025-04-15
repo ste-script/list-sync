@@ -116,7 +116,7 @@ sequenceDiagram
     C2->>C2: Process Event
     Note over C1,C2: Consumers process independently
 ```
-*This sequence diagram models a real-time change data capture (CDC) architecture employing Apache Kafka for event streaming. The workflow begins with a database emitting state changes, which are intercepted by a dedicated CDC connector. The connector serializes changes into event messages, propagated via a Kafka producer to a centralized broker. Events are persisted in durable Kafka topics, enabling simultaneous distribution to multiple consumer instances (Consumer A and B). Consumers asynchronously process events using isolated offset tracking, committing acknowledgments to the broker post-processing to ensure exactly-once semantics. The decoupled design demonstrates Kafka's capacity to support parallel, fault-tolerant data pipelines, with independent consumer groups processing identical streams for scalable workload distribution.*
+Figure1: *This sequence diagram models a real-time change data capture (CDC) architecture employing Apache Kafka for event streaming. The workflow begins with a database emitting state changes, which are intercepted by a dedicated CDC connector. The connector serializes changes into event messages, propagated via a Kafka producer to a centralized broker. Events are persisted in durable Kafka topics, enabling simultaneous distribution to multiple consumer instances (Consumer A and B). Consumers asynchronously process events using isolated offset tracking, committing acknowledgments to the broker post-processing to ensure exactly-once semantics. The decoupled design demonstrates Kafka's capacity to support parallel, fault-tolerant data pipelines, with independent consumer groups processing identical streams for scalable workload distribution.*
 ### Implementation Considerations
 
 - **Event Schema Management**
@@ -261,7 +261,7 @@ graph TD
     Consumer1 --> CSVWriter1
     Consumer2 --> CSVWriter2
 ```
-*Component diagram illustrating a scalable data pipeline architecture leveraging Apache Kafka for decoupled communication between heterogeneous data sources (MySQL, PostgreSQL) and downstream consumers. Producers ingest relational data via dedicated connectors, publishing to a Kafka cluster, which enables parallel processing by independent consumer groups (Consumer Group 1, 2) writing outputs to CSV sinks. The design emphasizes modularity, separation of concerns, and horizontal scalability but abstracts operational complexities.*
+Figure2: *Component diagram illustrating a scalable data pipeline architecture leveraging Apache Kafka for decoupled communication between heterogeneous data sources (MySQL, PostgreSQL) and downstream consumers. Producers ingest relational data via dedicated connectors, publishing to a Kafka cluster, which enables parallel processing by independent consumer groups (Consumer Group 1, 2) writing outputs to CSV sinks. The design emphasizes modularity, separation of concerns, and horizontal scalability but abstracts operational complexities.*
 ### Class Diagram
 
 ```mermaid
@@ -306,7 +306,7 @@ classDiagram
     BaseConnector --> Producer
     Consumer --> CSVWriter
 ```
-*This class diagram abstracts a producer-consumer pipeline for relational database streaming, prefering inheritance over composition.*
+Figure3: *This class diagram abstracts a producer-consumer pipeline for relational database streaming, prefering inheritance over composition.*
 ### Domain Events
 
 1.  Database Events
@@ -414,7 +414,7 @@ graph TD
     class KafkaBroker messaging
     class Consumer,Writer processor
 ```
-*Communication diagram depicting a heterogeneous database ingestion pipeline employing Kafka based event streaming. Source databases (MySQL, PostgreSQL) initiate replication via protocol-specific mechanisms: MySQL's binary log streaming (row-based) and PostgreSQL's logical replication (wal2json output plugin). Dedicated connectors serialize and asynchronously propagate change events to Kafka brokers using compressed message batches (stages 1-2). Consumers implement batched message polling with explicit offset tracking to enforce exactly-once delivery semantics (stage 3), triggering synchronous processing callbacks that interface with downstream persistence layers (stage 4). Containerized components demonstrate separation of concerns between database protocol adaptation, message routing, and stateful write operations. Color coding denotes functional roles: magenta (data sources), blue (protocol adapters), green (messaging infrastructure), and red (processing units). The architecture exemplifies a pattern for reconciling polyglot database systems into unified streaming pipelines while preserving transactional ordering within each database domain.*
+Figure4: *Communication diagram depicting a heterogeneous database ingestion pipeline employing Kafka based event streaming. Source databases (MySQL, PostgreSQL) initiate replication via protocol-specific mechanisms: MySQL's binary log streaming (row-based) and PostgreSQL's logical replication (wal2json output plugin). Dedicated connectors serialize and asynchronously propagate change events to Kafka brokers using compressed message batches (stages 1-2). Consumers implement batched message polling with explicit offset tracking to enforce exactly-once delivery semantics (stage 3), triggering synchronous processing callbacks that interface with downstream persistence layers (stage 4). Containerized components demonstrate separation of concerns between database protocol adaptation, message routing, and stateful write operations. Color coding denotes functional roles: magenta (data sources), blue (protocol adapters), green (messaging infrastructure), and red (processing units). The architecture exemplifies a pattern for reconciling polyglot database systems into unified streaming pipelines while preserving transactional ordering within each database domain.*
 ### Detailed Message Flow Sequence
 
 ```mermaid
@@ -453,7 +453,7 @@ sequenceDiagram
     Cons->>Kafka: Commit Offset
     Note over Cons,Kafka: Explicit or auto-commit
 ```
-*Sequence diagram modeling a Kafka centric change data capture pipeline for heterogeneous database synchronization. The workflow initiates with database engines (MySQL/PostgreSQL) emitting low-level storage events via native mechanisms (binary log or WAL), which are captured by protocol-specific connectors. Connectors normalize events into a canonical format before asynchronous transmission to Kafka producers, which apply message compression and metadata enrichment prior to broker submission (observing non-blocking delivery semantics with confirmation callbacks). Consumers employ batched message retrieval with explicit offset management, triggering synchronous processing callbacks that interface with persistence layers (e.g., CSV writers).*
+Figure5: *Sequence diagram modeling a Kafka centric change data capture pipeline for heterogeneous database synchronization. The workflow initiates with database engines (MySQL/PostgreSQL) emitting low-level storage events via native mechanisms (binary log or WAL), which are captured by protocol-specific connectors. Connectors normalize events into a canonical format before asynchronous transmission to Kafka producers, which apply message compression and metadata enrichment prior to broker submission (observing non-blocking delivery semantics with confirmation callbacks). Consumers employ batched message retrieval with explicit offset management, triggering synchronous processing callbacks that interface with persistence layers (e.g., CSV writers).*
 ## Behaviour
 
 ### Component State Management
@@ -625,7 +625,6 @@ Key technologies used:
 
 ## Validation
 
-Hardware specifications:
 
 ```text
 H/W path         Device         Class          Description
@@ -633,8 +632,8 @@ H/W path         Device         Class          Description
 /0/0                            memory         15GiB System memory
 /0/1                            processor      12th Gen Intel(R) Core(TM) i7-1280P
 ```
+Figure6: *Hardware specifications*
 
-Docker lan speed
 
 ```
 root@a03a74516591:/app# iperf -c tester
@@ -646,6 +645,7 @@ TCP window size: 16.0 KByte (default)
 [ ID] Interval       Transfer     Bandwidth
 [  1] 0.0000-10.0063 sec  79.6 GBytes  68.3 Gbits/sec
 ```
+Figure7: *Docker lan speed test results*
 
 Test seeding + producing + consuming all data from kafka without network constraints
 
@@ -664,7 +664,7 @@ Ran 2 tests in 51.310s
 
 OK
 ```
-*Test run for end-to-end data pipeline involving seeding, producing to, and consuming from Kafka, without network constraints. Over 500k rows inserted and ~250k updated/deleted in 43.06 seconds. All tests completed successfully in 51.31 seconds.*
+Figure8: *Test run for end-to-end data pipeline involving seeding, producing to, and consuming from Kafka, without network constraints. Over 500k rows inserted and ~250k updated/deleted in 43.06 seconds. All tests completed successfully in 51.31 seconds.*
 
 With network limitations (broker to broker rtt is 20ms)
 
@@ -674,7 +674,7 @@ Added bidirectional traffic control to container 403df04fdd98: 1000mbit bandwidt
 Added bidirectional traffic control to container e8a158ea597e: 1000mbit bandwidth, 10ms latency
 Added bidirectional traffic control to container 70bccec8718c: 1000mbit bandwidth, 10ms latency
 ```
-
+Figure9: *Added latency*
 ```
 broker2 to broker1
 e7aac33442a3:/$ ping broker1
@@ -684,7 +684,7 @@ PING broker1 (172.18.0.50) 56(84) bytes of data.
 64 bytes from broker1.list-sync_list_sync-net (172.18.0.50): icmp_seq=3 ttl=64 time=20.3 ms
 64 bytes from broker1.list-sync_list_sync-net (172.18.0.50): icmp_seq=4 ttl=64 time=20.2 ms
 ```
-
+Figure10: *Test rtt*
 Testing the limited network speed
 
 ```
@@ -697,7 +697,7 @@ TCP window size: 16.0 KByte (default)
 [ ID] Interval       Transfer     Bandwidth
 [  1] 0.00-10.04 sec  1.10 GBytes   941 Mbits/sec
 ```
-
+Figure11: *Test network speed*
 Run the test with network speed limited
 
 ```
@@ -715,7 +715,7 @@ Ran 2 tests in 61.426s
 
 OK
 ```
-*Test run under simulated network latency (20 ms RTT between brokers). Despite 1 Gbit/s bandwidth, seeding time increased to 51.78 seconds for ~500k inserts and ~250k updates/deletions. All tests passed in 61.43 seconds.*
+Figure12: *Test run under simulated network latency (20 ms RTT between brokers). Despite 1 Gbit/s bandwidth, seeding time increased to 51.78 seconds for ~500k inserts and ~250k updates/deletions. All tests passed in 61.43 seconds.*
 
 From now on i will only consume data from kafka brokers, i have already produced 1M row changes
 Tests results with 30 consumers (with networks limitations)
@@ -729,6 +729,7 @@ Ran 1 test in 48.480s
 
 OK
 ```
+Figure13: *Test results with 30 consumers*
 
 Tests results with 50 consumers (with networks limitations)
 
@@ -741,6 +742,7 @@ Ran 1 test in 64.460s
 
 OK
 ```
+Figure14: *Test results with 50 consumers*
 
 Tests results with 80 consumers (my laptop was at 100% cpus)
 
@@ -753,10 +755,14 @@ Ran 1 test in 78.597s
 
 OK
 ```
+Figure15: *Test results with 80 consumers*
+
 *Kafka consumption performance under network latency with increasing consumer counts. Processing 1M pre-produced row changes took 48.48s with 30 consumers, 64.46s with 50, and 78.60s with 80 consumers—where CPU saturation occurred on the host machine. All tests completed successfully.*
 
 Tests results with 100 consumers. Results may not be reliable as my laptop was at its limit with RAM and 100% CPU usage, so performance might be better in real scenarios
 ![htop](./images/htop.png)
+Figure16: *Htop screenshot*
+
 
 ```
 Executing task: docker logs --tail 1000 -f daf55550c1eed699b106b1523cffe6c5ce786c84d5c95df12d449e0b1a503321
@@ -767,8 +773,12 @@ Ran 1 test in 93.535s
 
 OK
 ```
+Figure17: *Test results with 100 consumers*
+
 
 ![docker stats command](./images/docker-stats.png)
+Figure17: *docker stats command screenshot*
+
 
 ### Reference values for containers
 
@@ -892,6 +902,7 @@ graph TD;
     B --> C[Consumer];
     C --> D[Writer];
 ```
+Figure18: *Simplified dependency graph*
 
 **Distribution:**
 
