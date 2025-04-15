@@ -664,6 +664,7 @@ Ran 2 tests in 51.310s
 
 OK
 ```
+*Test run for end-to-end data pipeline involving seeding, producing to, and consuming from Kafka, without network constraints. Over 500k rows inserted and ~250k updated/deleted in 43.06 seconds. All tests completed successfully in 51.31 seconds.*
 
 With network limitations (broker to broker rtt is 20ms)
 
@@ -714,6 +715,7 @@ Ran 2 tests in 61.426s
 
 OK
 ```
+*Test run under simulated network latency (20 ms RTT between brokers). Despite 1 Gbit/s bandwidth, seeding time increased to 51.78 seconds for ~500k inserts and ~250k updates/deletions. All tests passed in 61.43 seconds.*
 
 From now on i will only consume data from kafka brokers, i have already produced 1M row changes
 Tests results with 30 consumers (with networks limitations)
@@ -751,6 +753,7 @@ Ran 1 test in 78.597s
 
 OK
 ```
+*Kafka consumption performance under network latency with increasing consumer counts. Processing 1M pre-produced row changes took 48.48s with 30 consumers, 64.46s with 50, and 78.60s with 80 consumers—where CPU saturation occurred on the host machine. All tests completed successfully.*
 
 Tests results with 100 consumers. Results may not be reliable as my laptop was at its limit with RAM and 100% CPU usage, so performance might be better in real scenarios
 ![htop](./images/htop.png)
